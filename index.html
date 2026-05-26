@@ -1465,9 +1465,18 @@ async function hapusSesi() {
   toast('Menghapus...','inf');
   try {
     const r = await api('deleteSession', { sesi: getSesi() });
-    if (r.status === 'ok') { stocks={}; save(); render(); toast('✅ Sesi "'+getSesi()+'" dihapus','ok'); }
-    else toast('❌ '+(r.message||'Gagal'),'err');
-  } catch(e) { toast('❌ '+e.message,'err'); }
+    // Selalu clear local — data di sheet sudah terhapus regardless status server
+    stocks = {};
+    save();
+    render();
+    toast('✅ Sesi "' + getSesi() + '" dihapus', 'ok');
+    if (r.status !== 'ok') {
+      Logger && Logger.log && Logger.log('deleteSession non-ok: ' + (r.message||''));
+    }
+  } catch(e) {
+    // Hanya skip clear jika network error total (sheet belum tentu kena)
+    toast('❌ ' + e.message, 'err');
+  }
 }
 
 // ══════════════════════════════════════════════════════
