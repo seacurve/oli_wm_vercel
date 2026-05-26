@@ -344,6 +344,21 @@ input[type=number]{-moz-appearance:textfield}
   border-color:var(--fire2);box-shadow:0 0 10px rgba(232,93,0,.4)}
 .date-cell.other-month{opacity:.25;pointer-events:none}
 .date-cell.empty{background:none;border-color:transparent;cursor:default}
+/* tanggal yang punya sesi di Sheet */
+.date-cell.has-sesi{border-color:rgba(57,211,83,.4);background:rgba(57,211,83,.07)}
+.date-cell.has-sesi.selected{background:var(--fire2);border-color:var(--fire2)}
+.date-dot{display:block;width:5px;height:5px;border-radius:50%;
+  background:var(--lime);margin:1px auto 0;
+  box-shadow:0 0 4px var(--lime)}
+/* legend */
+.date-legend{display:flex;gap:14px;justify-content:center;
+  padding:10px 0 2px;flex-wrap:wrap}
+.dl-item{display:flex;align-items:center;gap:5px;
+  font-size:11px;color:var(--muted)}
+.dl-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;border:1px solid}
+.today-dot{background:rgba(0,0,0,0);border-color:rgba(255,107,0,.6)}
+.sesi-dot{background:rgba(57,211,83,.15);border-color:rgba(57,211,83,.5)}
+.sel-dot{background:var(--fire2);border-color:var(--fire2)}
 </style>
 </head>
 <body>
@@ -451,6 +466,11 @@ input[type=number]{-moz-appearance:textfield}
         <span>Kam</span><span>Jum</span><span>Sab</span>
       </div>
       <div class="date-grid" id="dateGrid"></div>
+      <div class="date-legend">
+        <span class="dl-item"><span class="dl-dot today-dot"></span> Hari ini</span>
+        <span class="dl-item"><span class="dl-dot sesi-dot"></span> Ada sesi tersimpan</span>
+        <span class="dl-item"><span class="dl-dot sel-dot"></span> Dipilih</span>
+      </div>
     </div>
     <button class="sheet-cancel" onclick="closeOverlay(null,'dateOverlay')" type="button">Batal</button>
   </div>
@@ -590,11 +610,38 @@ function getNama() { return namaAktif || 'User'; }
 // ══════════════════════════════════════════════════════
 // DATE PICKER
 // ══════════════════════════════════════════════════════
-function openDatePicker() {
+let dpSessions = new Set(); // set of "D-M-Y" strings yang punya sesi di Sheet
+
+async function openDatePicker() {
   dpYear  = sesiDate.getFullYear();
   dpMonth = sesiDate.getMonth();
+
+  // Fetch sessions dari Sheet untuk highlight tanggal
+  dpSessions = new Set();
+  try {
+    const r = await api('getSessions');
+    if (r.status === 'ok') {
+      const sessions = JSON.parse(r.sessions);
+      sessions.forEach(s => {
+        const parsed = parseSesiStr(s);
+        if (parsed) dpSessions.add(parsed.d + '-' + parsed.m + '-' + parsed.y);
+      });
+    }
+  } catch(e) { /* silent fail, just won't highlight */ }
+
   renderDateGrid();
   $('dateOverlay').classList.add('open');
+}
+
+// Parse "26Mei2026" → {d:26, m:4, y:2026} (m = 0-indexed)
+function parseSesiStr(s) {
+  const match = s.match(/^(\d{1,2})([A-Za-z]+)(\d{4})$/);
+  if (!match) return null;
+  const d = parseInt(match[1]);
+  const mIdx = BL.findIndex(b => b.toLowerCase() === match[2].toLowerCase());
+  const y = parseInt(match[3]);
+  if (mIdx === -1 || isNaN(d) || isNaN(y)) return null;
+  return { d, m: mIdx, y };
 }
 
 function dateNavMonth(delta) {
@@ -615,35 +662,55 @@ function renderDateGrid() {
   const selM    = sesiDate.getMonth();
   const selY    = sesiDate.getFullYear();
 
-  // First day of month (0=Sun)
-  const firstDay = new Date(dpYear, dpMonth, 1).getDay();
+  const firstDay    = new Date(dpYear, dpMonth, 1).getDay();
   const daysInMonth = new Date(dpYear, dpMonth + 1, 0).getDate();
 
   let html = '';
-  // Empty cells before first day
   for (let i = 0; i < firstDay; i++) html += '<div class="date-cell empty"></div>';
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const isToday = d === todayD && dpMonth === todayM && dpYear === todayY;
-    const isSel   = d === selD   && dpMonth === selM   && dpYear === selY;
+    const isToday  = d === todayD && dpMonth === todayM && dpYear === todayY;
+    const isSel    = d === selD   && dpMonth === selM   && dpYear === selY;
+    const hasSesi  = dpSessions.has(d + '-' + dpMonth + '-' + dpYear);
     let cls = 'date-cell';
-    if (isToday) cls += ' today';
-    if (isSel)   cls += ' selected';
-    html += `<div class="${cls}" onclick="pickDate(${d},${dpMonth},${dpYear})">${d}</div>`;
+    if (isToday)  cls += ' today';
+    if (isSel)    cls += ' selected';
+    if (hasSesi)  cls += ' has-sesi';
+    // dot indicator jika ada sesi tapi belum selected
+    const dot = hasSesi && !isSel
+      ? '<span class="date-dot"></span>'
+      : '';
+    html += `<div class="${cls}" onclick="pickDate(${d},${dpMonth},${dpYear})">${d}${dot}</div>`;
   }
   $('dateGrid').innerHTML = html;
 }
 
 function pickDate(d, m, y) {
+  const newStr = d + BL[m] + y;
+  const dateChanged = newStr !== sesiStr;
+
   sesiDate = new Date(y, m, d);
-  sesiStr  = d + BL[m] + y;
+  sesiStr  = newStr;
   updateSesiUI();
-  // Reset stocks when date changes
-  stocks = {};
-  save();
-  render();
-  closeOverlay(null, 'dateOverlay');
-  toast('📅 Sesi: ' + sesiStr + ' · Data direset', 'inf');
+
+  if (dateChanged) {
+    // Tanggal beda → reset stocks, mulai bersih
+    stocks = {};
+    save();
+    render();
+    const hasSesi = dpSessions.has(d + '-' + m + '-' + y);
+    closeOverlay(null, 'dateOverlay');
+    if (hasSesi) {
+      // Tawari load sesi lama
+      toast('📅 ' + sesiStr + ' · Ada sesi tersimpan — ketuk LOAD untuk lanjutkan', 'inf');
+    } else {
+      toast('📅 Sesi baru: ' + sesiStr, 'inf');
+    }
+  } else {
+    // Tanggal sama → tidak reset
+    save();
+    closeOverlay(null, 'dateOverlay');
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -716,6 +783,7 @@ async function loadItems(forceRefresh = false) {
 }
 
 async function refreshItems() {
+  // Hanya refresh master items dari Sheet, TIDAK reset stocks
   await loadItems(true);
 }
 
