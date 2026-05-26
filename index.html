@@ -1044,7 +1044,6 @@ function doSearch(q) {
 // BARCODE SCAN
 // ══════════════════════════════════════════════════════
 async function scanBarcode() {
-  // Load html5-qrcode library
   if (!window.Html5Qrcode) {
     toast('Memuat scanner...', 'inf');
     await new Promise((res, rej) => {
@@ -1055,15 +1054,13 @@ async function scanBarcode() {
     });
   }
 
-  // Buat overlay
   const overlay = document.createElement('div');
   overlay.style.cssText = `position:fixed;inset:0;background:#000;z-index:9999;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:16px`;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px`;
   overlay.innerHTML = `
     <div id="qr-reader" style="width:100%;max-width:400px;border-radius:12px;overflow:hidden"></div>
     <div style="color:#fff;margin:16px;font-size:14px;opacity:.7;text-align:center">
-      📷 Arahkan kamera ke barcode
+      📷 Arahkan kamera ke barcode / QR Code
     </div>
     <button id="btnScanCancel" style="padding:12px 32px;border-radius:8px;
       background:#e85d00;color:#fff;border:none;font-size:16px;
@@ -1073,10 +1070,8 @@ async function scanBarcode() {
   let scanner;
 
   const cleanup = async () => {
-    try {
-      if (scanner) await scanner.stop();
-    } catch(e) {}
-    overlay.remove();
+    try { if (scanner) await scanner.stop(); } catch(e) {}
+    if (overlay.parentNode) overlay.remove();
   };
 
   document.getElementById('btnScanCancel').onclick = cleanup;
@@ -1084,36 +1079,85 @@ async function scanBarcode() {
   try {
     scanner = new Html5Qrcode('qr-reader');
 
+    const formats = [
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.QR_CODE,      // ← QR support
+      Html5QrcodeSupportedFormats.DATA_MATRIX,
+    ];
+
     await scanner.start(
       { facingMode: 'environment' },
-      {
-        fps: 15,
-        qrbox: { width: 280, height: 120 }, // kotak panjang untuk barcode
-        aspectRatio: 1.5,
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-        ]
+      { fps: 15, qrbox: { width: 280, height: 120 }, aspectRatio: 1.5, formatsToSupport: formats },
+      async (decodedText) => {
+        await cleanup();           // stop kamera dulu
+        vibrate();                 // getar
+        beep();                    // bunyi
+        handleBarcode(decodedText); // baru proses hasil
       },
-      (decodedText) => {
-        // Berhasil scan
-        cleanup();
-        handleBarcode(decodedText);
-      },
-      (errorMsg) => {
-        // Per-frame error → normal, abaikan
-      }
+      () => {}                     // per-frame error → abaikan
     );
 
   } catch (e) {
     await cleanup();
-    const code = prompt('📷 Kamera tidak bisa dibuka.\nMasukkan barcode manual:');
+    const code = prompt('📷 Kamera tidak bisa dibuka. Masukkan barcode manual:');
     if (code) handleBarcode(code);
   }
+}
+
+function handleBarcode(code) {
+  if (!code) return;
+  const trimmed = code.trim();
+
+  // Cari di master items
+  const found = IT.find(i => i.barcode === trimmed) || IT.find(i => i.plu === trimmed);
+
+  // Masukkan ke search field
+  const srchEl = document.getElementById('srch');
+  if (srchEl) {
+    srchEl.value = found ? found.plu : trimmed;
+    srchEl.dispatchEvent(new Event('input')); // trigger search
+  }
+
+  // Buka semua brand supaya item terlihat
+  if (found) {
+    getMerks().forEach(m => expanded.add(m));
+    render();
+    toast('📷 ' + found.nama, 'ok');
+  } else {
+    searchQ = trimmed;
+    getMerks().forEach(m => expanded.add(m));
+    render();
+    toast('📷 Barcode: ' + trimmed, 'inf');
+  }
+}
+
+// ── Feedback: getar ──
+function vibrate() {
+  try {
+    if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
+  } catch(e) {}
+}
+
+// ── Feedback: beep ──
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 1200;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } catch(e) {}
 }
 
 // ══════════════════════════════════════════════════════
