@@ -1044,100 +1044,74 @@ function doSearch(q) {
 // BARCODE SCAN
 // ══════════════════════════════════════════════════════
 async function scanBarcode() {
-  if (!window.ZXing) {
+  // Load html5-qrcode library
+  if (!window.Html5Qrcode) {
     toast('Memuat scanner...', 'inf');
     await new Promise((res, rej) => {
       const s = document.createElement('script');
-      s.src = 'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js';
+      s.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
       s.onload = res; s.onerror = rej;
       document.head.appendChild(s);
     });
   }
 
+  // Buat overlay
   const overlay = document.createElement('div');
-  overlay.id = 'scanOverlay';
-  overlay.style.cssText = `
-    position:fixed;inset:0;background:#000;z-index:9999;
-    display:flex;flex-direction:column;align-items:center;justify-content:center`;
+  overlay.style.cssText = `position:fixed;inset:0;background:#000;z-index:9999;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:16px`;
   overlay.innerHTML = `
-    <div style="position:relative;width:100%;max-width:480px">
-      <video id="zxingVid" style="width:100%;display:block" playsinline autoplay muted></video>
-      <div style="position:absolute;inset:0;display:flex;align-items:center;
-        justify-content:center;pointer-events:none">
-        <div style="width:70%;height:2px;background:rgba(255,107,0,.8);
-          box-shadow:0 0 8px #ff6b00"></div>
-      </div>
-    </div>
+    <div id="qr-reader" style="width:100%;max-width:400px;border-radius:12px;overflow:hidden"></div>
     <div style="color:#fff;margin:16px;font-size:14px;opacity:.7;text-align:center">
-      📷 Arahkan barcode ke garis oranye
+      📷 Arahkan kamera ke barcode
     </div>
     <button id="btnScanCancel" style="padding:12px 32px;border-radius:8px;
       background:#e85d00;color:#fff;border:none;font-size:16px;
       font-weight:700;cursor:pointer;font-family:inherit">✕ Batal</button>`;
   document.body.appendChild(overlay);
 
-  let stopped = false;
-  let stream = null;
+  let scanner;
 
-  const cleanup = () => {
-    stopped = true;
-    if (stream) stream.getTracks().forEach(t => t.stop());
+  const cleanup = async () => {
+    try {
+      if (scanner) await scanner.stop();
+    } catch(e) {}
     overlay.remove();
   };
 
   document.getElementById('btnScanCancel').onclick = cleanup;
 
   try {
-    // Ambil stream manual — lebih kontrol
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
-    });
+    scanner = new Html5Qrcode('qr-reader');
 
-    const vid = document.getElementById('zxingVid');
-    vid.srcObject = stream;
-    await vid.play();
-
-    const hints = new Map();
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-      ZXing.BarcodeFormat.EAN_13,
-      ZXing.BarcodeFormat.EAN_8,
-      ZXing.BarcodeFormat.CODE_128,
-      ZXing.BarcodeFormat.CODE_39,
-      ZXing.BarcodeFormat.UPC_A,
-    ]);
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-
-    const reader = new ZXing.MultiFormatReader();
-    reader.setHints(hints);
-
-    // Loop manual scan per frame
-    const scan = () => {
-      if (stopped) return;
-
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width  = vid.videoWidth  || 640;
-        canvas.height = vid.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const luminance = new ZXing.RGBLuminanceSource(imgData.data, canvas.width, canvas.height);
-        const binary = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(luminance));
-        const result = reader.decode(binary);
-        // Berhasil!
+    await scanner.start(
+      { facingMode: 'environment' },
+      {
+        fps: 15,
+        qrbox: { width: 280, height: 120 }, // kotak panjang untuk barcode
+        aspectRatio: 1.5,
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+        ]
+      },
+      (decodedText) => {
+        // Berhasil scan
         cleanup();
-        handleBarcode(result.getText());
-      } catch (e) {
-        // NotFoundException = normal (frame belum ada barcode), lanjut scan
-        if (!stopped) requestAnimationFrame(scan);
+        handleBarcode(decodedText);
+      },
+      (errorMsg) => {
+        // Per-frame error → normal, abaikan
       }
-    };
-
-    requestAnimationFrame(scan);
+    );
 
   } catch (e) {
-    cleanup();
-    const code = prompt('📷 Kamera tidak bisa dibuka. Masukkan barcode manual:');
+    await cleanup();
+    const code = prompt('📷 Kamera tidak bisa dibuka.\nMasukkan barcode manual:');
     if (code) handleBarcode(code);
   }
 }
