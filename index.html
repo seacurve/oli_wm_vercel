@@ -241,6 +241,8 @@ input[type=number]{-moz-appearance:textfield}
   margin-bottom:8px;cursor:pointer;border:1px solid rgba(255,255,255,.06);
   -webkit-tap-highlight-color:transparent;transition:border-color .15s}
 .sitem:active{border-color:var(--fire)}
+.sitem-new{background:rgba(255,107,0,.08);border-color:rgba(255,107,0,.25)}
+.sitem-new:active{background:rgba(255,107,0,.2)}
 .sitem-name{font-weight:700;font-size:15px}
 .sitem-sub{font-size:12px;color:var(--muted);margin-top:2px}
 .sheet-cancel{width:100%;height:48px;margin-top:8px;background:var(--c2);
@@ -293,6 +295,55 @@ input[type=number]{-moz-appearance:textfield}
 .cfg-banner code{font-size:11px;color:var(--chalk);
   background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;
   word-break:break-all;display:block;margin-top:6px}
+
+/* ── SESI PICKER BUTTON ── */
+.sesi-picker-btn{width:100%;height:44px;padding:0 10px;
+  background:var(--c2);border:1px solid rgba(255,255,255,.07);
+  border-radius:var(--r);color:var(--chalk);font-size:16px;font-weight:700;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:border-color .2s;-webkit-appearance:none;text-align:left}
+.sesi-picker-btn:active{border-color:var(--fire)}
+.sesi-cal-ico{font-size:18px;opacity:.6}
+
+/* ── NAMA BUTTONS ── */
+.hf-nama{flex:1.4}
+.nama-btns{display:flex;gap:5px}
+.nama-btn{flex:1;height:44px;border-radius:var(--r);font-size:13px;font-weight:700;
+  background:var(--c2);color:var(--muted);
+  border:1.5px solid rgba(255,255,255,.07);
+  transition:all .15s;-webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;padding:0}
+.nama-btn:active{background:var(--c3);color:var(--chalk)}
+.nama-btn.on{background:rgba(255,107,0,.15);color:var(--fire);
+  border-color:rgba(255,107,0,.4)}
+
+/* ── DATE PICKER ── */
+.date-picker-wrap{padding:0 0 8px}
+.date-nav{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px}
+.date-nav-btn{width:40px;height:40px;border-radius:var(--r);
+  background:var(--c2);border:1px solid rgba(255,255,255,.07);
+  font-size:22px;color:var(--chalk);display:flex;align-items:center;
+  justify-content:center;transition:all .15s;touch-action:manipulation}
+.date-nav-btn:active{background:var(--fire2);color:#fff}
+.date-nav-label{font-family:'Barlow Condensed',sans-serif;font-size:20px;
+  font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.date-grid-head{display:grid;grid-template-columns:repeat(7,1fr);
+  gap:4px;margin-bottom:6px}
+.date-grid-head span{text-align:center;font-size:11px;color:var(--muted);
+  font-weight:700;padding:4px 0}
+.date-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.date-cell{height:42px;border-radius:var(--r);background:var(--c2);
+  border:1px solid rgba(255,255,255,.06);color:var(--chalk);
+  font-size:15px;font-weight:600;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;transition:all .15s;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.date-cell:active{background:var(--fire2);color:#fff}
+.date-cell.today{border-color:rgba(255,107,0,.5);color:var(--fire)}
+.date-cell.selected{background:var(--fire2);color:#fff;
+  border-color:var(--fire2);box-shadow:0 0 10px rgba(232,93,0,.4)}
+.date-cell.other-month{opacity:.25;pointer-events:none}
+.date-cell.empty{background:none;border-color:transparent;cursor:default}
 </style>
 </head>
 <body>
@@ -310,12 +361,20 @@ input[type=number]{-moz-appearance:textfield}
   </div>
   <div class="hdr-r2">
     <div class="hf">
-      <label>Sesi</label>
-      <input id="inSesi" type="text" placeholder="17Mei2026" autocomplete="off" oninput="save()">
+      <label>📅 Sesi</label>
+      <button class="sesi-picker-btn" id="inSesi" onclick="openDatePicker()" type="button">
+        <span id="sesiLabel">—</span>
+        <span class="sesi-cal-ico">📅</span>
+      </button>
     </div>
-    <div class="hf">
-      <label>Petugas</label>
-      <input id="inNama" type="text" placeholder="Nama kamu" autocomplete="off" oninput="save()">
+    <div class="hf hf-nama">
+      <label>👤 Petugas</label>
+      <div class="nama-btns" id="namaBtns">
+        <button class="nama-btn" onclick="setNama('Rudi')"  type="button">Rudi</button>
+        <button class="nama-btn" onclick="setNama('Ria')"   type="button">Ria</button>
+        <button class="nama-btn" onclick="setNama('Haji')"  type="button">Haji</button>
+        <button class="nama-btn" onclick="setNama('Meimei')" type="button">Meimei</button>
+      </div>
     </div>
   </div>
 </div>
@@ -376,6 +435,30 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 </div>
 
+<!-- DATE PICKER OVERLAY -->
+<div class="overlay" id="dateOverlay" onclick="closeOverlay(event,'dateOverlay')">
+  <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:max(24px,env(safe-area-inset-bottom))">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Pilih Tanggal Sesi</div>
+    <div class="date-picker-wrap">
+      <div class="date-nav">
+        <button class="date-nav-btn" onclick="dateNavMonth(-1)" type="button">‹</button>
+        <div class="date-nav-label" id="dateNavLabel">—</div>
+        <button class="date-nav-btn" onclick="dateNavMonth(1)" type="button">›</button>
+      </div>
+      <div class="date-grid-head">
+        <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span>
+        <span>Kam</span><span>Jum</span><span>Sab</span>
+      </div>
+      <div class="date-grid" id="dateGrid"></div>
+    </div>
+    <button class="sheet-cancel" onclick="closeOverlay(null,'dateOverlay')" type="button">Batal</button>
+  </div>
+</div>
+
+<!-- hidden state fields -->
+<input type="hidden" id="hidNama" value="">
+
 <!-- LAPORAN MODAL -->
 <div class="modal" id="lapModal" onclick="closeOverlay(event,'lapModal')">
   <div class="modal-box" onclick="event.stopPropagation()">
@@ -403,21 +486,34 @@ const API_URL = 'https://script.google.com/a/*/macros/s/AKfycbxgw-rqLSJ1ZVv3wHGR
 // ══════════════════════════════════════════════════════
 // STATE & STORAGE
 // ══════════════════════════════════════════════════════
-let IT = [];          // master items (dari Sheet, di-cache)
-let KATS = [];        // kategori list
-let stocks = {};      // {plu: {dos:'', pcs:''}}
+let IT = [];
+let KATS = [];
+let stocks = {};
 let catFilter = '';
 let expanded = new Set();
 let searchQ = '';
 let allExp = false;
 
+// sesi state: Date object + display string
+let sesiDate = new Date();   // actual Date
+let sesiStr  = '';           // e.g. "26Mei2026"
+let namaAktif = '';          // nama petugas aktif
+
+// date picker state
+let dpYear, dpMonth;         // currently displayed month in picker
+
 const LS = {
-  items:  'wm_items_v1',   // cache master items
-  kats:   'wm_kats_v1',
-  stocks: 'wm_stocks_v1',
-  sesi:   'wm_sesi_v1',
-  nama:   'wm_nama_v1',
+  items:    'wm_items_v1',
+  kats:     'wm_kats_v1',
+  stocks:   'wm_stocks_v2',
+  sesiStr:  'wm_sesi_v2',
+  sesiDate: 'wm_sesidate_v2',
+  nama:     'wm_nama_v2',
 };
+
+const BL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+const BL_FULL = ['Januari','Februari','Maret','April','Mei','Juni',
+                 'Juli','Agustus','September','Oktober','November','Desember'];
 
 function lsGet(k, def) {
   try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; }
@@ -426,16 +522,128 @@ function lsGet(k, def) {
 function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
 
 function save() {
-  lsSet(LS.stocks, stocks);
-  lsSet(LS.sesi, $('inSesi').value);
-  lsSet(LS.nama, $('inNama').value);
+  lsSet(LS.stocks,   stocks);
+  lsSet(LS.sesiStr,  sesiStr);
+  lsSet(LS.sesiDate, sesiDate.toISOString());
+  lsSet(LS.nama,     namaAktif);
 }
+
 function loadLocal() {
   stocks = lsGet(LS.stocks, {});
-  const s = lsGet(LS.sesi, '');
-  const n = lsGet(LS.nama, '');
-  if (s) $('inSesi').value = s;
-  if (n) $('inNama').value = n;
+  namaAktif = lsGet(LS.nama, '');
+
+  // Restore sesi
+  const savedDate = lsGet(LS.sesiDate, null);
+  const savedStr  = lsGet(LS.sesiStr, null);
+
+  // Key logic: if saved sesi date == today → restore with stocks
+  // if saved sesi date != today → it's a new day, reset stocks, set sesi to today
+  const today = new Date();
+  const todayStr = today.getDate() + BL[today.getMonth()] + today.getFullYear();
+
+  if (savedDate && savedStr) {
+    const savedD = new Date(savedDate);
+    const savedDayStr = savedD.getDate() + BL[savedD.getMonth()] + savedD.getFullYear();
+
+    if (savedDayStr === todayStr) {
+      // Same day → restore as-is
+      sesiDate = savedD;
+      sesiStr  = savedStr;
+    } else {
+      // Different day → new session, clear stocks
+      stocks   = {};
+      sesiDate = today;
+      sesiStr  = todayStr;
+    }
+  } else {
+    sesiDate = today;
+    sesiStr  = todayStr;
+  }
+
+  updateSesiUI();
+  updateNamaUI();
+}
+
+// ── Sesi UI ──
+function updateSesiUI() {
+  const lbl = $('sesiLabel');
+  if (lbl) lbl.textContent = sesiStr || '—';
+  $('inSesi') && ($('inSesi').textContent = sesiStr);
+}
+
+function getSesi() { return sesiStr || 'TanpaSesi'; }
+
+// ── Nama UI ──
+function setNama(nama) {
+  namaAktif = nama;
+  updateNamaUI();
+  save();
+}
+function updateNamaUI() {
+  document.querySelectorAll('.nama-btn').forEach(b => {
+    b.classList.toggle('on', b.textContent.trim() === namaAktif);
+  });
+  if ($('hidNama')) $('hidNama').value = namaAktif;
+}
+function getNama() { return namaAktif || 'User'; }
+
+// ══════════════════════════════════════════════════════
+// DATE PICKER
+// ══════════════════════════════════════════════════════
+function openDatePicker() {
+  dpYear  = sesiDate.getFullYear();
+  dpMonth = sesiDate.getMonth();
+  renderDateGrid();
+  $('dateOverlay').classList.add('open');
+}
+
+function dateNavMonth(delta) {
+  dpMonth += delta;
+  if (dpMonth > 11) { dpMonth = 0; dpYear++; }
+  if (dpMonth < 0)  { dpMonth = 11; dpYear--; }
+  renderDateGrid();
+}
+
+function renderDateGrid() {
+  $('dateNavLabel').textContent = BL_FULL[dpMonth] + ' ' + dpYear;
+
+  const today   = new Date();
+  const todayD  = today.getDate();
+  const todayM  = today.getMonth();
+  const todayY  = today.getFullYear();
+  const selD    = sesiDate.getDate();
+  const selM    = sesiDate.getMonth();
+  const selY    = sesiDate.getFullYear();
+
+  // First day of month (0=Sun)
+  const firstDay = new Date(dpYear, dpMonth, 1).getDay();
+  const daysInMonth = new Date(dpYear, dpMonth + 1, 0).getDate();
+
+  let html = '';
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) html += '<div class="date-cell empty"></div>';
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === todayD && dpMonth === todayM && dpYear === todayY;
+    const isSel   = d === selD   && dpMonth === selM   && dpYear === selY;
+    let cls = 'date-cell';
+    if (isToday) cls += ' today';
+    if (isSel)   cls += ' selected';
+    html += `<div class="${cls}" onclick="pickDate(${d},${dpMonth},${dpYear})">${d}</div>`;
+  }
+  $('dateGrid').innerHTML = html;
+}
+
+function pickDate(d, m, y) {
+  sesiDate = new Date(y, m, d);
+  sesiStr  = d + BL[m] + y;
+  updateSesiUI();
+  // Reset stocks when date changes
+  stocks = {};
+  save();
+  render();
+  closeOverlay(null, 'dateOverlay');
+  toast('📅 Sesi: ' + sesiStr + ' · Data direset', 'inf');
 }
 
 // ══════════════════════════════════════════════════════
@@ -515,8 +723,6 @@ async function refreshItems() {
 // HELPERS
 // ══════════════════════════════════════════════════════
 function $(id) { return document.getElementById(id); }
-function getSesi() { return $('inSesi').value.trim() || 'TanpaSesi'; }
-function getNama() { return $('inNama').value.trim() || 'User'; }
 
 const EM = {
   PERTAMINA:'⛽', SHELL:'🐚', CASTROL:'🛢', YAMALUBE:'🔷',
@@ -709,7 +915,8 @@ function updateStats() {
   $('hdrSub').textContent =
     IT.length + ' item · ' + getMerks().length + ' merk · ' +
     done + ' terisi · ' + pcs.toLocaleString('id-ID') + ' PCS' +
-    (catFilter ? ' · ' + catFilter : '');
+    (catFilter ? ' · ' + catFilter : '') +
+    (namaAktif ? ' · ' + namaAktif : '');
 }
 
 // ══════════════════════════════════════════════════════
@@ -866,18 +1073,35 @@ async function openLoad() {
     const r = await api('getSessions');
     if (r.status !== 'ok') { toast('❌ ' + r.message, 'err'); return; }
     const sessions = JSON.parse(r.sessions);
-    if (!sessions.length) { toast('Belum ada sesi tersimpan', 'inf'); return; }
 
-    $('sessList').innerHTML = sessions.slice().reverse().map(s =>
-      `<div class="sitem" onclick="loadSesi('${s}')">
-        <div class="sitem-name">📅 ${s}</div>
-        <div class="sitem-sub">Ketuk untuk load sesi ini</div>
-      </div>`
-    ).join('');
+    // Selalu ada opsi "Mulai Baru" di paling atas
+    const newBtn = `<div class="sitem sitem-new" onclick="startNew()">
+      <div class="sitem-name">✨ Mulai Sesi Baru</div>
+      <div class="sitem-sub">Reset data lokal, pilih tanggal baru</div>
+    </div>`;
+
+    const sesiBtns = sessions.length
+      ? sessions.slice().reverse().map(s =>
+          `<div class="sitem" onclick="loadSesi('${s}')">
+            <div class="sitem-name">📅 ${s}</div>
+            <div class="sitem-sub">Lanjutkan sesi ini</div>
+          </div>`
+        ).join('')
+      : `<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">
+           Belum ada sesi tersimpan di Sheet
+         </div>`;
+
+    $('sessList').innerHTML = newBtn + sesiBtns;
     $('loadOverlay').classList.add('open');
   } catch (e) {
     toast('❌ ' + e.message, 'err');
   }
+}
+
+function startNew() {
+  closeOverlay(null, 'loadOverlay');
+  // Buka date picker untuk pilih tanggal sesi baru
+  openDatePicker();
 }
 
 async function loadSesi(sesi) {
@@ -1048,14 +1272,8 @@ function toast(msg, type = 'ok') {
 // INIT
 // ══════════════════════════════════════════════════════
 (function init() {
-  // Default sesi = tanggal hari ini
-  const bl = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
-  const now = new Date();
-  $('inSesi').value = now.getDate() + bl[now.getMonth()] + now.getFullYear();
-
-  // Load data lokal (stocks, sesi, nama)
+  // Load data lokal — handles sesi date comparison & auto-reset
   loadLocal();
-
   // Load items (dari cache kalau ada, dari server kalau belum)
   loadItems();
 })();
