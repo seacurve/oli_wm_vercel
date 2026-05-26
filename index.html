@@ -928,7 +928,11 @@ function render() {
     <span class="i-badge" onclick="doSearch('${i.plu}')">${i.plu}</span>
     <div class="i-meta">
       <div class="i-nama">${i.nama}${catTag}</div>
-      <div class="i-detail">Isi ${i.isi} · ${i.perDos} pcs/dos${i.barcode?' · 📷'+i.barcode:''}</div>
+      <div class="i-detail">Isi ${i.isi} · ${i.perDos} pcs/dos${
+  i.barcode    ? ' · 🔹<small>'+i.barcode+'</small>'    : ''
+}${
+  i.barcodeDus ? ' · 📦<small>'+i.barcodeDus+'</small>' : ''
+}</div>
     </div>
   </div>
   <div class="i-inputs">
@@ -1113,27 +1117,112 @@ function handleBarcode(code) {
   if (!code) return;
   const trimmed = code.trim();
 
-  // Cari di master items
-  const found = IT.find(i => i.barcode === trimmed) || IT.find(i => i.plu === trimmed);
+  // ── Cari item: cek barcodeDus dulu, lalu barcode satuan, lalu PLU ──
+  const foundByDus = IT.find(i => i.barcodeDus && i.barcodeDus === trimmed);
+  const foundBySat = IT.find(i => i.barcode    && i.barcode    === trimmed);
+  const foundByPlu = IT.find(i => i.plu === trimmed);
 
-  // Masukkan ke search field
-  const srchEl = document.getElementById('srch');
-  if (srchEl) {
-    srchEl.value = found ? found.plu : trimmed;
-    srchEl.dispatchEvent(new Event('input')); // trigger search
-  }
+  if (foundByDus) {
+    // ── SCAN DUS → +1 DOS ──
+    const plu = foundByDus.plu;
+    if (!stocks[plu]) stocks[plu] = { dos: '', pcs: '' };
+    stocks[plu].dos = String((parseFloat(stocks[plu].dos) || 0) + 1);
+    save();
 
-  // Buka semua brand supaya item terlihat
-  if (found) {
+    const inp = document.querySelector(
+      `input[data-plu="${CSS.escape(plu)}"][data-f="dos"]`
+    );
+    if (inp) {
+      inp.value = stocks[plu].dos;
+      inp.dispatchEvent(new Event('input'));
+    } else {
+      getMerks().forEach(m => {
+        if (byMerk(m).find(i => i.plu === plu)) expanded.add(m);
+      });
+      render();
+    }
+
+    scrollToItem(plu);
+
+    const srchEl = document.getElementById('srch');
+    if (srchEl) {
+      srchEl.value = foundByDus.nama;
+      srchEl.dispatchEvent(new Event('input'));
+    }
+
+    toast('📦 DUS +1 → ' + foundByDus.nama +
+          ' · Total DOS: ' + stocks[plu].dos, 'ok');
+
+  } else if (foundBySat) {
+    // ── SCAN SATUAN → +1 PCS ──
+    const plu = foundBySat.plu;
+    if (!stocks[plu]) stocks[plu] = { dos: '', pcs: '' };
+    stocks[plu].pcs = String((parseFloat(stocks[plu].pcs) || 0) + 1);
+    save();
+
+    const inp = document.querySelector(
+      `input[data-plu="${CSS.escape(plu)}"][data-f="pcs"]`
+    );
+    if (inp) {
+      inp.value = stocks[plu].pcs;
+      inp.dispatchEvent(new Event('input'));
+    } else {
+      getMerks().forEach(m => {
+        if (byMerk(m).find(i => i.plu === plu)) expanded.add(m);
+      });
+      render();
+    }
+
+    scrollToItem(plu);
+
+    const srchEl = document.getElementById('srch');
+    if (srchEl) {
+      srchEl.value = foundBySat.nama;
+      srchEl.dispatchEvent(new Event('input'));
+    }
+
+    toast('🔹 PCS +1 → ' + foundBySat.nama +
+          ' · Total PCS: ' + stocks[plu].pcs, 'ok');
+
+  } else if (foundByPlu) {
+    // ── COCOK PLU → highlight item, user input manual ──
+    const srchEl = document.getElementById('srch');
+    if (srchEl) {
+      srchEl.value = foundByPlu.plu;
+      srchEl.dispatchEvent(new Event('input'));
+    }
     getMerks().forEach(m => expanded.add(m));
     render();
-    toast('📷 ' + found.nama, 'ok');
+    scrollToItem(foundByPlu.plu);
+    toast('📋 ' + foundByPlu.nama + ' — isi manual', 'inf');
+
   } else {
-    searchQ = trimmed;
+    // ── TIDAK DITEMUKAN ──
+    const srchEl = document.getElementById('srch');
+    if (srchEl) {
+      srchEl.value = trimmed;
+      srchEl.dispatchEvent(new Event('input'));
+    }
     getMerks().forEach(m => expanded.add(m));
     render();
-    toast('📷 Barcode: ' + trimmed, 'inf');
+    toast('❓ Barcode tidak ditemukan: ' + trimmed, 'err');
   }
+}
+function scrollToItem(plu) {
+  setTimeout(() => {
+    const inp = document.querySelector(
+      `input[data-plu="${CSS.escape(plu)}"][data-f="dos"]`
+    );
+    if (inp) {
+      const card = inp.closest('.item');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.style.transition = 'box-shadow .2s';
+        card.style.boxShadow = '0 0 0 2px var(--fire)';
+        setTimeout(() => { card.style.boxShadow = ''; }, 1200);
+      }
+    }
+  }, 100);
 }
 
 // ── Feedback: getar ──
