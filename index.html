@@ -851,7 +851,8 @@ function buildToolbar() {
 function setCat(k) {
   catFilter = k;
   showBelumDiisi = false;
-  if (k) getMerks().forEach(m => expanded.add(m));
+  allExp = false;
+  expanded.clear();
   buildToolbar(); render();
 }
 
@@ -877,7 +878,7 @@ function render() {
   if (!IT.length) return;
   const merks    = getMerks();
   const fq       = searchQ.toLowerCase();
-  const forceOpen = !!searchQ || !!catFilter || allExp || showBelumDiisi;
+  const forceOpen = !!searchQ || allExp || showBelumDiisi;
   let html = '';
 
   for (const m of merks) {
