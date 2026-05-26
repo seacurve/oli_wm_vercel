@@ -572,9 +572,7 @@ let undoStack = [];
 const MAX_UNDO = 20;
 
 // scan
-let scanCooldown    = {};
-let scanSessionLog  = [];
-const SCAN_COOLDOWN_MS = 1200;
+
 
 // riwayat
 let riwayatScan = [];
@@ -1129,81 +1127,27 @@ async function scanBarcode() {
     });
   }
 
-  scanSessionLog = [];
-
   const overlay = document.createElement('div');
   overlay.style.cssText = `position:fixed;inset:0;background:#000;z-index:9999;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:16px;gap:12px;overflow-y:auto`;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px`;
   overlay.innerHTML = `
     <div id="qr-reader" style="width:100%;max-width:400px;border-radius:12px;overflow:hidden"></div>
-
-    <div id="scanInfo" style="width:100%;max-width:400px;
-      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
-      border-radius:10px;padding:12px 14px;display:none">
-      <div style="font-size:10px;color:#7d8590;font-weight:700;
-        text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Terakhir Discan</div>
-      <div id="scanLastName"   style="font-size:15px;font-weight:700;color:#fff;margin-bottom:2px">—</div>
-      <div id="scanLastDetail" style="font-size:12px;color:#7d8590">—</div>
-    </div>
-
-    <div style="display:flex;gap:10px;width:100%;max-width:400px">
-      <div style="flex:1;background:rgba(255,107,0,.1);border:1px solid rgba(255,107,0,.25);
-        border-radius:8px;padding:8px;text-align:center">
-        <div style="font-size:10px;color:#ff6b00;font-weight:700;
-          text-transform:uppercase;letter-spacing:1px">Total Scan</div>
-        <div id="scanCount" style="font-size:22px;font-weight:900;color:#ff6b00;
-          font-family:'Barlow Condensed',sans-serif">0</div>
-      </div>
-      <div style="flex:1;background:rgba(57,211,83,.07);border:1px solid rgba(57,211,83,.2);
-        border-radius:8px;padding:8px;text-align:center">
-        <div style="font-size:10px;color:#39d353;font-weight:700;
-          text-transform:uppercase;letter-spacing:1px">Item Unik</div>
-        <div id="scanUniq" style="font-size:22px;font-weight:900;color:#39d353;
-          font-family:'Barlow Condensed',sans-serif">0</div>
-      </div>
-    </div>
-
-    <div style="color:#7d8590;font-size:13px;text-align:center">
-      📷 Arahkan kamera ke barcode · Kamera tetap aktif
+    <div style="color:#7d8590;font-size:14px;text-align:center">
+      📷 Arahkan kamera ke barcode
     </div>
     <button id="btnScanCancel" style="width:100%;max-width:400px;padding:14px;
       border-radius:10px;background:#e85d00;color:#fff;border:none;
-      font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;
-      letter-spacing:.5px">✕ SELESAI SCAN</button>`;
-
+      font-size:16px;font-weight:800;cursor:pointer;font-family:inherit">
+      ✕ Batal
+    </button>`;
   document.body.appendChild(overlay);
 
   let scanner;
   const cleanup = async () => {
     try { if (scanner) await scanner.stop(); } catch(e) {}
     if (overlay.parentNode) overlay.remove();
-    scanCooldown = {};
   };
   document.getElementById('btnScanCancel').onclick = cleanup;
-
-  const updateScanCounter = () => {
-    const countEl = document.getElementById('scanCount');
-    const uniqEl  = document.getElementById('scanUniq');
-    if (countEl) countEl.textContent = scanSessionLog.length;
-    if (uniqEl)  uniqEl.textContent  = new Set(scanSessionLog.map(l => l.plu)).size;
-  };
-
-  const updateScanInfo = (nama, detail, type) => {
-    const info   = document.getElementById('scanInfo');
-    const nameEl = document.getElementById('scanLastName');
-    const detEl  = document.getElementById('scanLastDetail');
-    if (!info || !nameEl || !detEl) return;
-    info.style.display      = 'block';
-    nameEl.textContent      = nama;
-    detEl.textContent       = detail;
-    info.style.borderColor  = type==='dus' ? 'rgba(255,107,0,.4)'
-                            : type==='pcs' ? 'rgba(88,166,255,.4)'
-                            : 'rgba(248,81,73,.4)';
-    nameEl.style.color      = type==='dus' ? '#ff6b00'
-                            : type==='pcs' ? '#58a6ff'
-                            : '#f85149';
-  };
 
   try {
     scanner = new Html5Qrcode('qr-reader');
@@ -1217,99 +1161,69 @@ async function scanBarcode() {
       { facingMode: 'environment' },
       { fps: 15, qrbox: { width: 280, height: 120 }, aspectRatio: 1.5, formatsToSupport: formats },
       async (decodedText) => {
-        const now = Date.now();
-        // Cooldown anti-double
-        if (scanCooldown[decodedText] && now - scanCooldown[decodedText] < SCAN_COOLDOWN_MS) return;
-        scanCooldown[decodedText] = now;
         vibrate();
-        const result = handleBarcodeContinuous(decodedText);
-        if (result && result.plu) {
-          scanSessionLog.push({ plu: result.plu, nama: result.nama, type: result.type, time: new Date() });
-          updateScanCounter();
-          updateScanInfo(
-            (result.type==='dus'?'📦 ':result.type==='pcs'?'🔹 ':'❓ ') + result.nama,
-            result.detail, result.type
-          );
-        }
-        beepType(result ? result.type : 'error');
+        await cleanup();          // kamera tutup dulu
+        handleBarcode(decodedText); // baru navigasi
       },
       () => {}
     );
   } catch(e) {
     await cleanup();
     const code = prompt('📷 Kamera tidak bisa dibuka. Masukkan barcode manual:');
-    if (code) handleBarcodeContinuous(code);
+    if (code) handleBarcode(code);
   }
 }
 
-// ── Handler continuous scan ──
-function handleBarcodeContinuous(code) {
-  if (!code) return null;
+// ── Handler bukan continuous scan ──
+function handleBarcode(code) {
+  if (!code) return;
   const trimmed    = code.trim();
   const foundByDus = IT.find(i => i.barcodeDus && i.barcodeDus === trimmed);
   const foundBySat = IT.find(i => i.barcode    && i.barcode    === trimmed);
   const foundByPlu = IT.find(i => i.plu === trimmed);
 
   if (foundByDus) {
-    const plu = foundByDus.plu;
-    if (!stocks[plu]) stocks[plu] = { dos: '', pcs: '' };
-    addUndoLog(plu, 'dos', foundByDus.nama);
-    stocks[plu].dos = String((parseFloat(stocks[plu].dos) || 0) + 1);
-    save();
-    addRiwayat(plu, foundByDus.nama, 'dus', 'dos', stocks[plu].dos);
-    updateItemUI(plu, 'dos');
-    toast('📦 DUS +1 → ' + foundByDus.nama + ' · DOS: ' + stocks[plu].dos, 'ok');
-    return { plu, type:'dus', nama:foundByDus.nama,
-      detail:'DOS: '+stocks[plu].dos+' · PCS: '+(stocks[plu].pcs||0) };
+    // Barcode DUS → buka brand, scroll ke item, fokus input DOS
+    getMerks().forEach(m => {
+      if (byMerk(m).find(i => i.plu === foundByDus.plu)) expanded.add(m);
+    });
+    searchQ = ''; $('srch').value = '';
+    render();
+    setTimeout(() => focusItemField(foundByDus.plu, 'dos'), 200);
+    beepType('dus');
+    toast('📦 DUS → ' + foundByDus.nama, 'ok');
 
   } else if (foundBySat) {
-    const plu = foundBySat.plu;
-    if (!stocks[plu]) stocks[plu] = { dos: '', pcs: '' };
-    addUndoLog(plu, 'pcs', foundBySat.nama);
-    stocks[plu].pcs = String((parseFloat(stocks[plu].pcs) || 0) + 1);
-    save();
-    addRiwayat(plu, foundBySat.nama, 'pcs', 'pcs', stocks[plu].pcs);
-    updateItemUI(plu, 'pcs');
-    toast('🔹 PCS +1 → ' + foundBySat.nama + ' · PCS: ' + stocks[plu].pcs, 'ok');
-    return { plu, type:'pcs', nama:foundBySat.nama,
-      detail:'DOS: '+(stocks[plu].dos||0)+' · PCS: '+stocks[plu].pcs };
+    // Barcode SATUAN → buka brand, scroll ke item, fokus input PCS
+    getMerks().forEach(m => {
+      if (byMerk(m).find(i => i.plu === foundBySat.plu)) expanded.add(m);
+    });
+    searchQ = ''; $('srch').value = '';
+    render();
+    setTimeout(() => focusItemField(foundBySat.plu, 'pcs'), 200);
+    beepType('pcs');
+    toast('🔹 PCS → ' + foundBySat.nama, 'ok');
 
   } else if (foundByPlu) {
-    toast('📋 ' + foundByPlu.nama + ' — isi manual', 'inf');
-    return { plu:foundByPlu.plu, type:'plu', nama:foundByPlu.nama, detail:'Input manual' };
-
-  } else {
-    toast('❓ Tidak ditemukan: ' + trimmed, 'err');
-    return { plu:'', type:'error', nama:trimmed, detail:'Barcode tidak ada di master' };
-  }
-}
-
-// ── Update DOM item tanpa full re-render ──
-function updateItemUI(plu, field) {
-  const inp = document.querySelector(`input[data-plu="${CSS.escape(plu)}"][data-f="${field}"]`);
-  if (inp) {
-    inp.value = stocks[plu][field];
-    inp.dispatchEvent(new Event('input'));
-    scrollToItem(plu);
-  } else {
-    getMerks().forEach(m => { if (byMerk(m).find(i => i.plu === plu)) expanded.add(m); });
+    // Cocok PLU → scroll ke item
+    getMerks().forEach(m => {
+      if (byMerk(m).find(i => i.plu === foundByPlu.plu)) expanded.add(m);
+    });
+    searchQ = ''; $('srch').value = '';
     render();
-    setTimeout(() => scrollToItem(plu), 150);
-  }
-}
+    setTimeout(() => focusItemField(foundByPlu.plu, 'dos'), 200);
+    beepType('pcs');
+    toast('📋 ' + foundByPlu.nama + ' — isi manual', 'inf');
 
-// ── Scroll & highlight item ──
-function scrollToItem(plu) {
-  setTimeout(() => {
-    const inp = document.querySelector(`input[data-plu="${CSS.escape(plu)}"][data-f="dos"]`);
-    if (!inp) return;
-    const card = inp.closest('.item');
-    if (!card) return;
-    card.scrollIntoView({ behavior:'smooth', block:'center' });
-    card.style.transition  = 'box-shadow .2s';
-    card.style.boxShadow   = '0 0 0 2px var(--fire)';
-    setTimeout(() => { card.style.boxShadow = ''; }, 1200);
-  }, 100);
+  } else {
+    // Tidak ditemukan → tampilkan di search
+    $('srch').value = trimmed;
+    searchQ = trimmed;
+    getMerks().forEach(m => expanded.add(m));
+    render();
+    beepType('error');
+    toast('❓ Tidak ditemukan: ' + trimmed, 'err');
+  }
 }
 
 // ── handleBarcode lama (untuk fallback manual input) ──
@@ -1318,6 +1232,22 @@ function handleBarcode(code) { handleBarcodeContinuous(code); }
 // ══════════════════════════════════════════════════════
 // SOUND
 // ══════════════════════════════════════════════════════
+function focusItemField(plu, field) {
+  const inp = document.querySelector(
+    `input[data-plu="${CSS.escape(plu)}"][data-f="${field}"]`
+  );
+  if (!inp) return;
+  const card = inp.closest('.item');
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.transition = 'box-shadow .2s';
+    card.style.boxShadow  = '0 0 0 2px var(--fire)';
+    setTimeout(() => { card.style.boxShadow = ''; }, 1500);
+  }
+  setTimeout(() => { inp.focus(); inp.select(); }, 350);
+}
+
+
 function beepType(type) {
   try {
     const ctx  = new (window.AudioContext || window.webkitAudioContext)();
