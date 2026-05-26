@@ -1044,41 +1044,9 @@ function doSearch(q) {
 // BARCODE SCAN
 // ══════════════════════════════════════════════════════
 async function scanBarcode() {
-  // Cek BarcodeDetector native dulu
-  if ('BarcodeDetector' in window) {
-    await scanNative();
-  } else {
-    // Fallback ke ZXing
-    await scanZXing();
-  }
-}
-
-async function scanNative() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 } }
-    });
-    const vid = $('vidEl');
-    vid.srcObject = stream;
-    await vid.play();
-    const det = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','code_39','upc_a','upc_e'] });
-    let found = false;
-    for (let i = 0; i < 20; i++) {
-      await new Promise(r => setTimeout(r, 500));
-      const res = await det.detect(vid);
-      if (res.length) { handleBarcode(res[0].rawValue); found = true; break; }
-    }
-    stream.getTracks().forEach(t => t.stop());
-    if (!found) toast('Tidak terdeteksi', 'err');
-  } catch (e) {
-    const code = prompt('📷 Kamera gagal. Masukkan barcode manual:');
-    if (code) handleBarcode(code);
-  }
-}
-
-async function scanZXing() {
   // Load ZXing kalau belum ada
   if (!window.ZXing) {
+    toast('Memuat scanner...', 'inf');
     await new Promise((res, rej) => {
       const s = document.createElement('script');
       s.src = 'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js';
@@ -1087,40 +1055,55 @@ async function scanZXing() {
     });
   }
 
-  // Buat modal kamera sederhana
-  const modal = document.createElement('div');
-  modal.style.cssText = `position:fixed;inset:0;background:#000;z-index:9999;
+  // Buat overlay kamera
+  const overlay = document.createElement('div');
+  overlay.id = 'scanOverlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:#000;z-index:9999;
     display:flex;flex-direction:column;align-items:center;justify-content:center`;
-  modal.innerHTML = `
-    <video id="zxingVid" style="width:100%;max-height:70vh;object-fit:cover" playsinline></video>
-    <div style="color:#fff;margin:16px;font-size:14px;opacity:.7">Arahkan kamera ke barcode...</div>
-    <button onclick="this.closest('div[style]').remove();if(window._zxingStop)window._zxingStop();"
-      style="padding:12px 32px;border-radius:8px;background:#e85d00;color:#fff;
-      border:none;font-size:16px;font-weight:700;cursor:pointer">✕ Batal</button>`;
-  document.body.appendChild(modal);
+  overlay.innerHTML = `
+    <div style="position:relative;width:100%;max-width:480px">
+      <video id="zxingVid" style="width:100%;display:block" playsinline></video>
+      <!-- garis bidik tengah -->
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+        <div style="width:70%;height:2px;background:rgba(255,107,0,.8);box-shadow:0 0 8px var(--fire)"></div>
+      </div>
+    </div>
+    <div style="color:#fff;margin:16px;font-size:14px;opacity:.7;text-align:center">
+      📷 Arahkan barcode ke garis oranye
+    </div>
+    <button id="btnScanCancel" style="padding:12px 32px;border-radius:8px;
+      background:#e85d00;color:#fff;border:none;font-size:16px;
+      font-weight:700;cursor:pointer;font-family:inherit">✕ Batal</button>`;
+  document.body.appendChild(overlay);
+
+  let codeReader;
+  const cleanup = () => {
+    try { codeReader?.reset(); } catch(e) {}
+    overlay.remove();
+  };
+
+  document.getElementById('btnScanCancel').onclick = cleanup;
 
   try {
-    const codeReader = new ZXing.BrowserMultiFormatReader();
-    const videoEl = modal.querySelector('#zxingVid');
-    
-    window._zxingStop = () => {
-      try { codeReader.reset(); } catch(e) {}
-    };
+    codeReader = new ZXing.BrowserMultiFormatReader();
+    const videoEl = document.getElementById('zxingVid');
 
     await codeReader.decodeFromConstraints(
-      { video: { facingMode: 'environment' } },
+      { video: { facingMode: { ideal: 'environment' } } },
       videoEl,
       (result, err) => {
         if (result) {
-          window._zxingStop();
-          modal.remove();
+          cleanup();
           handleBarcode(result.getText());
         }
+        // err di sini normal (tiap frame yang gagal detect), tidak perlu handle
       }
     );
   } catch (e) {
-    modal.remove();
-    const code = prompt('📷 Kamera gagal. Masukkan barcode manual:');
+    cleanup();
+    // Fallback manual kalau kamera benar-benar gagal
+    const code = prompt('📷 Kamera tidak bisa dibuka. Masukkan barcode manual:');
     if (code) handleBarcode(code);
   }
 }
