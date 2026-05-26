@@ -1044,7 +1044,6 @@ function doSearch(q) {
 // BARCODE SCAN
 // ══════════════════════════════════════════════════════
 async function scanBarcode() {
-  // Load ZXing kalau belum ada
   if (!window.ZXing) {
     toast('Memuat scanner...', 'inf');
     await new Promise((res, rej) => {
@@ -1055,7 +1054,6 @@ async function scanBarcode() {
     });
   }
 
-  // Buat overlay kamera
   const overlay = document.createElement('div');
   overlay.id = 'scanOverlay';
   overlay.style.cssText = `
@@ -1063,10 +1061,11 @@ async function scanBarcode() {
     display:flex;flex-direction:column;align-items:center;justify-content:center`;
   overlay.innerHTML = `
     <div style="position:relative;width:100%;max-width:480px">
-      <video id="zxingVid" style="width:100%;display:block" playsinline></video>
-      <!-- garis bidik tengah -->
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
-        <div style="width:70%;height:2px;background:rgba(255,107,0,.8);box-shadow:0 0 8px var(--fire)"></div>
+      <video id="zxingVid" style="width:100%;display:block" playsinline autoplay muted></video>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;
+        justify-content:center;pointer-events:none">
+        <div style="width:70%;height:2px;background:rgba(255,107,0,.8);
+          box-shadow:0 0 8px #ff6b00"></div>
       </div>
     </div>
     <div style="color:#fff;margin:16px;font-size:14px;opacity:.7;text-align:center">
@@ -1077,32 +1076,67 @@ async function scanBarcode() {
       font-weight:700;cursor:pointer;font-family:inherit">✕ Batal</button>`;
   document.body.appendChild(overlay);
 
-  let codeReader;
+  let stopped = false;
+  let stream = null;
+
   const cleanup = () => {
-    try { codeReader?.reset(); } catch(e) {}
+    stopped = true;
+    if (stream) stream.getTracks().forEach(t => t.stop());
     overlay.remove();
   };
 
   document.getElementById('btnScanCancel').onclick = cleanup;
 
   try {
-    codeReader = new ZXing.BrowserMultiFormatReader();
-    const videoEl = document.getElementById('zxingVid');
+    // Ambil stream manual — lebih kontrol
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+    });
 
-    await codeReader.decodeFromConstraints(
-      { video: { facingMode: { ideal: 'environment' } } },
-      videoEl,
-      (result, err) => {
-        if (result) {
-          cleanup();
-          handleBarcode(result.getText());
-        }
-        // err di sini normal (tiap frame yang gagal detect), tidak perlu handle
+    const vid = document.getElementById('zxingVid');
+    vid.srcObject = stream;
+    await vid.play();
+
+    const hints = new Map();
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+      ZXing.BarcodeFormat.EAN_13,
+      ZXing.BarcodeFormat.EAN_8,
+      ZXing.BarcodeFormat.CODE_128,
+      ZXing.BarcodeFormat.CODE_39,
+      ZXing.BarcodeFormat.UPC_A,
+    ]);
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+
+    const reader = new ZXing.MultiFormatReader();
+    reader.setHints(hints);
+
+    // Loop manual scan per frame
+    const scan = () => {
+      if (stopped) return;
+
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width  = vid.videoWidth  || 640;
+        canvas.height = vid.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const luminance = new ZXing.RGBLuminanceSource(imgData.data, canvas.width, canvas.height);
+        const binary = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(luminance));
+        const result = reader.decode(binary);
+        // Berhasil!
+        cleanup();
+        handleBarcode(result.getText());
+      } catch (e) {
+        // NotFoundException = normal (frame belum ada barcode), lanjut scan
+        if (!stopped) requestAnimationFrame(scan);
       }
-    );
+    };
+
+    requestAnimationFrame(scan);
+
   } catch (e) {
     cleanup();
-    // Fallback manual kalau kamera benar-benar gagal
     const code = prompt('📷 Kamera tidak bisa dibuka. Masukkan barcode manual:');
     if (code) handleBarcode(code);
   }
