@@ -9,7 +9,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── TOKENS ── */
 :root{
   --bg:#0d1117; --c1:#161b22; --c2:#1c2430; --c3:#21262d;
   --fire:#ff6b00; --fire2:#e85d00;
@@ -64,11 +63,17 @@ input[type=number]{-moz-appearance:textfield}
 .prog-info b{color:var(--chalk)}
 .prog-info .hi{color:var(--fire);font-weight:700}
 
-/* ── TOOLBAR ── */
-.toolbar{display:flex;gap:6px;padding:7px 10px;background:var(--bg);
+/* ── TOOLBAR — 2 BARIS ── */
+.toolbar{background:var(--bg);border-bottom:1px solid rgba(255,255,255,.04)}
+/* baris atas: aksi */
+.toolbar-top{display:flex;gap:6px;padding:7px 10px 5px;
   overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none;
   border-bottom:1px solid rgba(255,255,255,.04)}
-.toolbar::-webkit-scrollbar{display:none}
+.toolbar-top::-webkit-scrollbar{display:none}
+/* baris bawah: kategori */
+.toolbar-cats{display:flex;gap:6px;padding:5px 10px 7px;
+  overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none}
+.toolbar-cats::-webkit-scrollbar{display:none}
 .tb{height:34px;padding:0 12px;border-radius:6px;font-size:12px;font-weight:600;
   white-space:nowrap;flex-shrink:0;background:var(--c2);
   color:var(--muted);border:1px solid rgba(255,255,255,.06);
@@ -422,15 +427,18 @@ input[type=number]{-moz-appearance:textfield}
   <span><b class="hi" id="sPct">0%</b> · 🛢 <b id="sPcs">0</b> PCS</span>
 </div>
 
-<!-- TOOLBAR -->
+<!-- TOOLBAR: 2 baris — aksi di atas, kategori di bawah -->
 <div class="toolbar" id="toolbar">
-  <button class="tb on" id="fAll" onclick="setCat('')">📋 Semua</button>
-  <div class="tb-sep"></div>
-  <button class="tb" id="btnBelum" onclick="toggleBelumDiisi()">⚠️ Belum: <b id="belumCount">0</b></button>
-  <div class="tb-sep"></div>
-  <button class="tb" id="btnExp" onclick="expandAll()">▼ Buka Semua</button>
-  <div class="tb-sep"></div>
-  <button class="tb" onclick="refreshItems()">🔄 Refresh Data</button>
+  <div class="toolbar-top">
+    <button class="tb" id="btnBelum" onclick="toggleBelumDiisi()">⚠️ Belum: <b id="belumCount">0</b></button>
+    <div class="tb-sep"></div>
+    <button class="tb" id="btnExp" onclick="expandAll()">▼ Buka Semua</button>
+    <div class="tb-sep"></div>
+    <button class="tb" onclick="refreshItems()">🔄 Refresh Data</button>
+  </div>
+  <div class="toolbar-cats">
+    <button class="tb on" onclick="setCat('')">📋 Semua</button>
+  </div>
 </div>
 
 <!-- SEARCH -->
@@ -523,7 +531,6 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 </div>
 
-<!-- hidden -->
 <input type="hidden" id="hidNama" value="">
 
 <!-- LAPORAN MODAL -->
@@ -563,21 +570,14 @@ let sesiDate = new Date();
 let sesiStr  = '';
 let namaAktif = '';
 
-// date picker
 let dpYear, dpMonth;
 let dpSessions = new Set();
 
-// undo stack
 let undoStack = [];
 const MAX_UNDO = 20;
 
-// scan
-
-
-// riwayat
 let riwayatScan = [];
 
-// ── localStorage keys ──
 const LS = {
   items:    'wm_items_v1',
   kats:     'wm_kats_v1',
@@ -823,23 +823,29 @@ function statTotal() { return catFilter ? IT.filter(i => i.kategori === catFilte
 function statPCS()   { return getMerks().reduce((s, m) => s + merkTot(m), 0); }
 
 // ══════════════════════════════════════════════════════
-// TOOLBAR
+// TOOLBAR — 2 BARIS
 // ══════════════════════════════════════════════════════
 function buildToolbar() {
-  const katBtns = KATS.map(k =>
+  const belumPool = catFilter ? IT.filter(i => i.kategori === catFilter) : IT;
+  const belumCnt  = belumPool.filter(i => !filled(i.plu)).length;
+  const katBtns   = KATS.map(k =>
     `<button class="tb${catFilter===k?' on':''}" onclick="setCat('${k}')">${k}</button>`
   ).join('');
+
   $('toolbar').innerHTML = `
-    <button class="tb${catFilter===''?' on':''}" onclick="setCat('')">📋 Semua</button>
-    ${katBtns}
-    <div class="tb-sep"></div>
-    <button class="tb${showBelumDiisi?' on':''}" id="btnBelum" onclick="toggleBelumDiisi()">
-      ⚠️ Belum: <b id="belumCount">0</b>
-    </button>
-    <div class="tb-sep"></div>
-    <button class="tb" id="btnExp" onclick="expandAll()">▼ Buka Semua</button>
-    <div class="tb-sep"></div>
-    <button class="tb" onclick="refreshItems()">🔄 Refresh Data</button>`;
+    <div class="toolbar-top">
+      <button class="tb${showBelumDiisi?' on':''}" id="btnBelum" onclick="toggleBelumDiisi()">
+        ⚠️ Belum: <b id="belumCount">${belumCnt}</b>
+      </button>
+      <div class="tb-sep"></div>
+      <button class="tb" id="btnExp" onclick="expandAll()">${allExp?'▲ Tutup':'▼ Buka'} Semua</button>
+      <div class="tb-sep"></div>
+      <button class="tb" onclick="refreshItems()">🔄 Refresh Data</button>
+    </div>
+    <div class="toolbar-cats">
+      <button class="tb${catFilter===''?' on':''}" onclick="setCat('')">📋 Semua</button>
+      ${katBtns}
+    </div>`;
 }
 
 function setCat(k) {
@@ -877,7 +883,6 @@ function render() {
   for (const m of merks) {
     let items = byMerk(m);
 
-    // filter search
     if (fq) items = items.filter(i =>
       i.plu.toLowerCase().includes(fq) ||
       i.nama.toLowerCase().includes(fq) ||
@@ -885,7 +890,6 @@ function render() {
       (i.barcodeDus && i.barcodeDus.toLowerCase().includes(fq))
     );
 
-    // filter belum diisi
     if (showBelumDiisi) items = items.filter(i => !filled(i.plu));
 
     if (!items.length) continue;
@@ -982,7 +986,7 @@ function updateStats() {
   const pcs   = statPCS();
   const pct   = total > 0 ? Math.round(done / total * 100) : 0;
   $('progFill').style.width = pct + '%';
-  $('sDone').textContent = done;
+  $('sDone').textContent  = done;
   $('sTotal').textContent = total;
   $('sPct').textContent   = pct + '%';
   $('sPcs').textContent   = pcs.toLocaleString('id-ID');
@@ -992,7 +996,6 @@ function updateStats() {
     (catFilter  ? ' · ' + catFilter  : '') +
     (namaAktif  ? ' · ' + namaAktif  : '');
 
-  // update belum count
   const belumEl = $('belumCount');
   if (belumEl) {
     const pool = catFilter ? IT.filter(i => i.kategori === catFilter) : IT;
@@ -1024,15 +1027,13 @@ function onInp(inp) {
     if (tn) tn.textContent = t !== null ? t : '—';
     if (tw) tw.classList.toggle('zero', t === null || t === 0);
     card.classList.toggle('done', filled(plu));
-    // Tampilkan/sembunyikan tombol reset
     const existReset = card.querySelector('.i-reset');
     const itemTop    = card.querySelector('.item-top');
-    const item       = IT.find(i => i.plu === plu);
     if (filled(plu) && !existReset && itemTop) {
       const rb = document.createElement('button');
-      rb.className = 'i-reset';
-      rb.type      = 'button';
-      rb.title     = 'Reset item';
+      rb.className   = 'i-reset';
+      rb.type        = 'button';
+      rb.title       = 'Reset item';
       rb.textContent = '×';
       rb.onclick = function() { resetItem(plu, rb); };
       itemTop.appendChild(rb);
@@ -1113,8 +1114,39 @@ function undoLast() {
   toast('↩ Undo: ' + last.nama + ' · ' + last.field.toUpperCase() + ' dikembalikan', 'inf');
 }
 
+// ── UPDATE UI ITEM (dipakai undo) ──────────────────────
+// FIX: fungsi ini sebelumnya tidak ada → undo crash
+function updateItemUI(plu, field) {
+  const inp = document.querySelector(
+    `input[data-plu="${CSS.escape(plu)}"][data-f="${field}"]`
+  );
+  if (!inp) return;
+  const d = stocks[plu];
+  inp.value = d ? (d[field] ?? '') : '';
+  const card = inp.closest('.item');
+  if (!card) { updateStats(); return; }
+  const t  = calc(plu);
+  const tn = card.querySelector('.tot-n');
+  const tw = card.querySelector('.i-tot');
+  if (tn) tn.textContent = t !== null ? t : '—';
+  if (tw) tw.classList.toggle('zero', t === null || t === 0);
+  card.classList.toggle('done', filled(plu));
+  const existReset = card.querySelector('.i-reset');
+  const itemTop    = card.querySelector('.item-top');
+  if (filled(plu) && !existReset && itemTop) {
+    const rb = document.createElement('button');
+    rb.className = 'i-reset'; rb.type = 'button';
+    rb.title = 'Reset item'; rb.textContent = '×';
+    rb.onclick = function() { resetItem(plu, rb); };
+    itemTop.appendChild(rb);
+  } else if (!filled(plu) && existReset) {
+    existReset.remove();
+  }
+  updateStats();
+}
+
 // ══════════════════════════════════════════════════════
-// BARCODE SCAN — Continuous + Cooldown + Counter
+// BARCODE SCAN
 // ══════════════════════════════════════════════════════
 async function scanBarcode() {
   if (!window.Html5Qrcode) {
@@ -1162,8 +1194,8 @@ async function scanBarcode() {
       { fps: 15, qrbox: { width: 280, height: 120 }, aspectRatio: 1.5, formatsToSupport: formats },
       async (decodedText) => {
         vibrate();
-        await cleanup();          // kamera tutup dulu
-        handleBarcode(decodedText); // baru navigasi
+        await cleanup();           // tutup kamera
+        handleBarcode(decodedText); // ← panggil handler yang benar
       },
       () => {}
     );
@@ -1174,7 +1206,9 @@ async function scanBarcode() {
   }
 }
 
-// ── Handler bukan continuous scan ──
+// ── HANDLE BARCODE — satu definisi, tidak ada duplikat ──
+// FIX: sebelumnya ada 2 definisi; yang ke-2 menimpa yang ke-1
+// dengan memanggil handleBarcodeContinuous yang tidak ada
 function handleBarcode(code) {
   if (!code) return;
   const trimmed    = code.trim();
@@ -1183,40 +1217,39 @@ function handleBarcode(code) {
   const foundByPlu = IT.find(i => i.plu === trimmed);
 
   if (foundByDus) {
-    // Barcode DUS → buka brand, scroll ke item, fokus input DOS
     getMerks().forEach(m => {
       if (byMerk(m).find(i => i.plu === foundByDus.plu)) expanded.add(m);
     });
     searchQ = ''; $('srch').value = '';
     render();
     setTimeout(() => focusItemField(foundByDus.plu, 'dos'), 200);
+    addRiwayat(foundByDus.plu, foundByDus.nama, 'dus', 'dos', '');
     beepType('dus');
     toast('📦 DUS → ' + foundByDus.nama, 'ok');
 
   } else if (foundBySat) {
-    // Barcode SATUAN → buka brand, scroll ke item, fokus input PCS
     getMerks().forEach(m => {
       if (byMerk(m).find(i => i.plu === foundBySat.plu)) expanded.add(m);
     });
     searchQ = ''; $('srch').value = '';
     render();
     setTimeout(() => focusItemField(foundBySat.plu, 'pcs'), 200);
+    addRiwayat(foundBySat.plu, foundBySat.nama, 'pcs', 'pcs', '');
     beepType('pcs');
     toast('🔹 PCS → ' + foundBySat.nama, 'ok');
 
   } else if (foundByPlu) {
-    // Cocok PLU → scroll ke item
     getMerks().forEach(m => {
       if (byMerk(m).find(i => i.plu === foundByPlu.plu)) expanded.add(m);
     });
     searchQ = ''; $('srch').value = '';
     render();
     setTimeout(() => focusItemField(foundByPlu.plu, 'dos'), 200);
+    addRiwayat(foundByPlu.plu, foundByPlu.nama, 'plu', '', '');
     beepType('pcs');
     toast('📋 ' + foundByPlu.nama + ' — isi manual', 'inf');
 
   } else {
-    // Tidak ditemukan → tampilkan di search
     $('srch').value = trimmed;
     searchQ = trimmed;
     getMerks().forEach(m => expanded.add(m));
@@ -1226,11 +1259,8 @@ function handleBarcode(code) {
   }
 }
 
-// ── handleBarcode lama (untuk fallback manual input) ──
-function handleBarcode(code) { handleBarcodeContinuous(code); }
-
 // ══════════════════════════════════════════════════════
-// SOUND
+// FOCUS & SCROLL KE ITEM
 // ══════════════════════════════════════════════════════
 function focusItemField(plu, field) {
   const inp = document.querySelector(
@@ -1247,7 +1277,9 @@ function focusItemField(plu, field) {
   setTimeout(() => { inp.focus(); inp.select(); }, 350);
 }
 
-
+// ══════════════════════════════════════════════════════
+// SOUND
+// ══════════════════════════════════════════════════════
 function beepType(type) {
   try {
     const ctx  = new (window.AudioContext || window.webkitAudioContext)();
@@ -1319,7 +1351,7 @@ function openRiwayat() {
       const timeStr = time.getHours().toString().padStart(2,'0') + ':' +
                       time.getMinutes().toString().padStart(2,'0') + ':' +
                       time.getSeconds().toString().padStart(2,'0');
-      const ico   = r.type==='dus' ? '📦' : r.type==='pcs' ? '🔹' : '❓';
+      const ico = r.type==='dus' ? '📦' : r.type==='pcs' ? '🔹' : '❓';
       return `<div class="rwi">
         <div class="rwi-ico">${ico}</div>
         <div class="rwi-info">
