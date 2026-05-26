@@ -95,7 +95,7 @@ input[type=number]{-moz-appearance:textfield}
 .btn-scan{width:44px;height:44px;border-radius:var(--r);
   background:var(--c2);border:1px solid rgba(255,255,255,.06);
   font-size:20px;display:flex;align-items:center;justify-content:center;
-  color:var(--muted)}
+  color:var(--muted);position:relative}
 .btn-scan:active{background:var(--fire2);color:#fff;border-color:var(--fire2)}
 
 /* ── BRAND GROUP ── */
@@ -143,6 +143,13 @@ input[type=number]{-moz-appearance:textfield}
 .i-cat{display:inline-block;font-size:10px;color:var(--gold);
   background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.2);
   padding:1px 6px;border-radius:4px;margin-left:4px}
+.i-reset{width:24px;height:24px;border-radius:50%;
+  background:rgba(248,81,73,.1);color:var(--red);
+  border:1px solid rgba(248,81,73,.25);font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .15s;
+  -webkit-tap-highlight-color:transparent}
+.i-reset:active{background:rgba(248,81,73,.3)}
 
 /* ── INPUT ROW ── */
 .i-inputs{display:flex;align-items:center;gap:6px}
@@ -194,6 +201,9 @@ input[type=number]{-moz-appearance:textfield}
 .btn-lap{flex:.7;background:rgba(88,166,255,.1);color:var(--ice);
   border:1px solid rgba(88,166,255,.2);
   font-family:'Barlow Condensed',sans-serif;font-size:16px}
+.btn-undo{flex:.6;background:rgba(240,165,0,.1);color:var(--gold);
+  border:1px solid rgba(240,165,0,.2);
+  font-family:'Barlow Condensed',sans-serif;font-size:20px}
 .btn-del{flex:.6;background:rgba(248,81,73,.1);color:var(--red);
   border:1px solid rgba(248,81,73,.2);
   font-family:'Barlow Condensed',sans-serif;font-size:16px}
@@ -337,20 +347,19 @@ input[type=number]{-moz-appearance:textfield}
   border:1px solid rgba(255,255,255,.06);color:var(--chalk);
   font-size:15px;font-weight:600;display:flex;align-items:center;
   justify-content:center;cursor:pointer;transition:all .15s;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  flex-direction:column;gap:0}
 .date-cell:active{background:var(--fire2);color:#fff}
 .date-cell.today{border-color:rgba(255,107,0,.5);color:var(--fire)}
 .date-cell.selected{background:var(--fire2);color:#fff;
   border-color:var(--fire2);box-shadow:0 0 10px rgba(232,93,0,.4)}
 .date-cell.other-month{opacity:.25;pointer-events:none}
 .date-cell.empty{background:none;border-color:transparent;cursor:default}
-/* tanggal yang punya sesi di Sheet */
 .date-cell.has-sesi{border-color:rgba(57,211,83,.4);background:rgba(57,211,83,.07)}
 .date-cell.has-sesi.selected{background:var(--fire2);border-color:var(--fire2)}
 .date-dot{display:block;width:5px;height:5px;border-radius:50%;
   background:var(--lime);margin:1px auto 0;
   box-shadow:0 0 4px var(--lime)}
-/* legend */
 .date-legend{display:flex;gap:14px;justify-content:center;
   padding:10px 0 2px;flex-wrap:wrap}
 .dl-item{display:flex;align-items:center;gap:5px;
@@ -359,13 +368,25 @@ input[type=number]{-moz-appearance:textfield}
 .today-dot{background:rgba(0,0,0,0);border-color:rgba(255,107,0,.6)}
 .sesi-dot{background:rgba(57,211,83,.15);border-color:rgba(57,211,83,.5)}
 .sel-dot{background:var(--fire2);border-color:var(--fire2)}
+
+/* ── RIWAYAT ITEM ── */
+.rwi{display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--c2);border-radius:8px;
+  border:1px solid rgba(255,255,255,.06)}
+.rwi-ico{font-size:20px;flex-shrink:0}
+.rwi-info{flex:1;min-width:0}
+.rwi-nama{font-size:13px;font-weight:700;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rwi-detail{font-size:11px;color:var(--muted);margin-top:1px}
+.rwi-undo{flex-shrink:0;padding:4px 10px;border-radius:6px;
+  background:rgba(240,165,0,.1);color:var(--gold);
+  border:1px solid rgba(240,165,0,.2);font-size:12px;font-weight:700}
+.rwi-undo:active{background:rgba(240,165,0,.25)}
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════
-     HEADER
-══════════════════════════════════════ -->
+<!-- HEADER -->
 <div class="hdr">
   <div class="hdr-r1">
     <div class="logo">🛢</div>
@@ -385,9 +406,9 @@ input[type=number]{-moz-appearance:textfield}
     <div class="hf hf-nama">
       <label>👤 Petugas</label>
       <div class="nama-btns" id="namaBtns">
-        <button class="nama-btn" onclick="setNama('Rudi')"  type="button">Rudi</button>
-        <button class="nama-btn" onclick="setNama('Ria')"   type="button">Ria</button>
-        <button class="nama-btn" onclick="setNama('Haji')"  type="button">Haji</button>
+        <button class="nama-btn" onclick="setNama('Rudi')"   type="button">Rudi</button>
+        <button class="nama-btn" onclick="setNama('Ria')"    type="button">Ria</button>
+        <button class="nama-btn" onclick="setNama('Haji')"   type="button">Haji</button>
         <button class="nama-btn" onclick="setNama('Meimei')" type="button">Meimei</button>
       </div>
     </div>
@@ -403,10 +424,11 @@ input[type=number]{-moz-appearance:textfield}
 
 <!-- TOOLBAR -->
 <div class="toolbar" id="toolbar">
-  <button class="tb" id="btnExp" onclick="expandAll()">▼ Buka Semua</button>
-  <div class="tb-sep"></div>
   <button class="tb on" id="fAll" onclick="setCat('')">📋 Semua</button>
-  <!-- kategori buttons inject di sini -->
+  <div class="tb-sep"></div>
+  <button class="tb" id="btnBelum" onclick="toggleBelumDiisi()">⚠️ Belum: <b id="belumCount">0</b></button>
+  <div class="tb-sep"></div>
+  <button class="tb" id="btnExp" onclick="expandAll()">▼ Buka Semua</button>
   <div class="tb-sep"></div>
   <button class="tb" onclick="refreshItems()">🔄 Refresh Data</button>
 </div>
@@ -418,7 +440,14 @@ input[type=number]{-moz-appearance:textfield}
     <input id="srch" type="search" placeholder="Cari nama / PLU / barcode..."
       autocomplete="off" autocorrect="off" spellcheck="false">
   </div>
-  <button class="btn-scan" onclick="scanBarcode()" type="button">📷</button>
+  <button class="btn-scan" onclick="scanBarcode()" type="button" title="Scan Barcode">📷</button>
+  <button class="btn-scan" onclick="openRiwayat()" type="button" title="Riwayat Scan" id="btnRiwayat">
+    📋
+    <span id="riwayatBadge" style="display:none;position:absolute;top:-4px;right:-4px;
+      width:16px;height:16px;border-radius:50%;background:var(--fire);
+      font-size:9px;font-weight:900;color:#fff;
+      align-items:center;justify-content:center">0</span>
+  </button>
 </div>
 
 <!-- LIST -->
@@ -432,11 +461,12 @@ input[type=number]{-moz-appearance:textfield}
 <!-- BOTTOM BAR -->
 <div class="btm">
   <div class="btm-row">
-    <button class="btm-btn btn-save" id="btnSave" onclick="syncUp()" type="button">⬆ SIMPAN</button>
-    <button class="btm-btn btn-load" onclick="openLoad()" type="button">⬇ LOAD</button>
-    <button class="btm-btn btn-csv"  onclick="exportCSV()" type="button">📥 CSV</button>
-    <button class="btm-btn btn-lap"  onclick="openLap()" type="button">📊</button>
-    <button class="btm-btn btn-del"  onclick="hapusSesi()" type="button">🗑</button>
+    <button class="btm-btn btn-save" id="btnSave" onclick="syncUp()"    type="button">⬆ SIMPAN</button>
+    <button class="btm-btn btn-load" onclick="openLoad()"               type="button">⬇ LOAD</button>
+    <button class="btm-btn btn-csv"  onclick="exportCSV()"              type="button">📥 CSV</button>
+    <button class="btm-btn btn-lap"  onclick="openLap()"                type="button">📊</button>
+    <button class="btm-btn btn-undo" onclick="undoLast()"               type="button">↩</button>
+    <button class="btm-btn btn-del"  onclick="hapusSesi()"              type="button">🗑</button>
   </div>
 </div>
 
@@ -452,14 +482,15 @@ input[type=number]{-moz-appearance:textfield}
 
 <!-- DATE PICKER OVERLAY -->
 <div class="overlay" id="dateOverlay" onclick="closeOverlay(event,'dateOverlay')">
-  <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:max(24px,env(safe-area-inset-bottom))">
+  <div class="sheet" onclick="event.stopPropagation()"
+    style="padding-bottom:max(24px,env(safe-area-inset-bottom))">
     <div class="sheet-handle"></div>
     <div class="sheet-title">Pilih Tanggal Sesi</div>
     <div class="date-picker-wrap">
       <div class="date-nav">
         <button class="date-nav-btn" onclick="dateNavMonth(-1)" type="button">‹</button>
         <div class="date-nav-label" id="dateNavLabel">—</div>
-        <button class="date-nav-btn" onclick="dateNavMonth(1)" type="button">›</button>
+        <button class="date-nav-btn" onclick="dateNavMonth(1)"  type="button">›</button>
       </div>
       <div class="date-grid-head">
         <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span>
@@ -476,7 +507,23 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 </div>
 
-<!-- hidden state fields -->
+<!-- RIWAYAT SCAN OVERLAY -->
+<div class="overlay" id="riwayatOverlay" onclick="closeOverlay(event,'riwayatOverlay')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-height:85vh">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="sheet-title" style="margin:0">📋 Riwayat Scan</div>
+      <button onclick="clearRiwayat()" type="button"
+        style="font-size:12px;color:var(--red);background:rgba(248,81,73,.1);
+          border:1px solid rgba(248,81,73,.2);padding:4px 10px;
+          border-radius:6px;font-weight:700">Hapus Semua</button>
+    </div>
+    <div id="riwayatList" style="display:flex;flex-direction:column;gap:6px"></div>
+    <button class="sheet-cancel" onclick="closeOverlay(null,'riwayatOverlay')" type="button">Tutup</button>
+  </div>
+</div>
+
+<!-- hidden -->
 <input type="hidden" id="hidNama" value="">
 
 <!-- LAPORAN MODAL -->
@@ -496,32 +543,43 @@ input[type=number]{-moz-appearance:textfield}
 
 <script>
 // ══════════════════════════════════════════════════════
-// ⚙️  KONFIGURASI — GANTI URL INI SETELAH DEPLOY APPS SCRIPT
+// ⚙️  KONFIGURASI
 // ══════════════════════════════════════════════════════
 const API_URL = 'https://script.google.com/a/*/macros/s/AKfycbxgw-rqLSJ1ZVv3wHGRTk9FVCu2iSUly8qRel51mvV9WsMZlRXcmybxPegiI4KSTECyzw/exec';
-// Contoh: 'https://script.google.com/macros/s/AKfycbxXXXXXXXXX/exec'
-// atau pakai format /a/ jika akun Workspace:
-// 'https://script.google.com/a/macros/domainmu.com/s/AKfycbxXXXXXXXXX/exec'
 
 // ══════════════════════════════════════════════════════
-// STATE & STORAGE
+// STATE
 // ══════════════════════════════════════════════════════
-let IT = [];
-let KATS = [];
-let stocks = {};
-let catFilter = '';
-let expanded = new Set();
-let searchQ = '';
-let allExp = false;
+let IT      = [];
+let KATS    = [];
+let stocks  = {};
+let catFilter      = '';
+let expanded       = new Set();
+let searchQ        = '';
+let allExp         = false;
+let showBelumDiisi = false;
 
-// sesi state: Date object + display string
-let sesiDate = new Date();   // actual Date
-let sesiStr  = '';           // e.g. "26Mei2026"
-let namaAktif = '';          // nama petugas aktif
+let sesiDate = new Date();
+let sesiStr  = '';
+let namaAktif = '';
 
-// date picker state
-let dpYear, dpMonth;         // currently displayed month in picker
+// date picker
+let dpYear, dpMonth;
+let dpSessions = new Set();
 
+// undo stack
+let undoStack = [];
+const MAX_UNDO = 20;
+
+// scan
+let scanCooldown    = {};
+let scanSessionLog  = [];
+const SCAN_COOLDOWN_MS = 1200;
+
+// riwayat
+let riwayatScan = [];
+
+// ── localStorage keys ──
 const LS = {
   items:    'wm_items_v1',
   kats:     'wm_kats_v1',
@@ -529,12 +587,16 @@ const LS = {
   sesiStr:  'wm_sesi_v2',
   sesiDate: 'wm_sesidate_v2',
   nama:     'wm_nama_v2',
+  riwayat:  'wm_riwayat_v1',
 };
 
-const BL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+const BL      = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
 const BL_FULL = ['Januari','Februari','Maret','April','Mei','Juni',
                  'Juli','Agustus','September','Oktober','November','Desember'];
 
+// ══════════════════════════════════════════════════════
+// STORAGE HELPERS
+// ══════════════════════════════════════════════════════
 function lsGet(k, def) {
   try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; }
   catch(e) { return def; }
@@ -549,28 +611,21 @@ function save() {
 }
 
 function loadLocal() {
-  stocks = lsGet(LS.stocks, {});
+  stocks    = lsGet(LS.stocks, {});
   namaAktif = lsGet(LS.nama, '');
 
-  // Restore sesi
   const savedDate = lsGet(LS.sesiDate, null);
-  const savedStr  = lsGet(LS.sesiStr, null);
-
-  // Key logic: if saved sesi date == today → restore with stocks
-  // if saved sesi date != today → it's a new day, reset stocks, set sesi to today
-  const today = new Date();
-  const todayStr = today.getDate() + BL[today.getMonth()] + today.getFullYear();
+  const savedStr  = lsGet(LS.sesiStr,  null);
+  const today     = new Date();
+  const todayStr  = today.getDate() + BL[today.getMonth()] + today.getFullYear();
 
   if (savedDate && savedStr) {
-    const savedD = new Date(savedDate);
+    const savedD      = new Date(savedDate);
     const savedDayStr = savedD.getDate() + BL[savedD.getMonth()] + savedD.getFullYear();
-
     if (savedDayStr === todayStr) {
-      // Same day → restore as-is
       sesiDate = savedD;
       sesiStr  = savedStr;
     } else {
-      // Different day → new session, clear stocks
       stocks   = {};
       sesiDate = today;
       sesiStr  = todayStr;
@@ -584,25 +639,19 @@ function loadLocal() {
   updateNamaUI();
 }
 
-// ── Sesi UI ──
+// ══════════════════════════════════════════════════════
+// SESI & NAMA
+// ══════════════════════════════════════════════════════
 function updateSesiUI() {
   const lbl = $('sesiLabel');
   if (lbl) lbl.textContent = sesiStr || '—';
-  $('inSesi') && ($('inSesi').textContent = sesiStr);
 }
+function getSesi()  { return sesiStr || 'TanpaSesi'; }
 
-function getSesi() { return sesiStr || 'TanpaSesi'; }
-
-// ── Nama UI ──
-function setNama(nama) {
-  namaAktif = nama;
-  updateNamaUI();
-  save();
-}
+function setNama(nama) { namaAktif = nama; updateNamaUI(); save(); }
 function updateNamaUI() {
-  document.querySelectorAll('.nama-btn').forEach(b => {
-    b.classList.toggle('on', b.textContent.trim() === namaAktif);
-  });
+  document.querySelectorAll('.nama-btn').forEach(b =>
+    b.classList.toggle('on', b.textContent.trim() === namaAktif));
   if ($('hidNama')) $('hidNama').value = namaAktif;
 }
 function getNama() { return namaAktif || 'User'; }
@@ -610,36 +659,29 @@ function getNama() { return namaAktif || 'User'; }
 // ══════════════════════════════════════════════════════
 // DATE PICKER
 // ══════════════════════════════════════════════════════
-let dpSessions = new Set(); // set of "D-M-Y" strings yang punya sesi di Sheet
-
 async function openDatePicker() {
   dpYear  = sesiDate.getFullYear();
   dpMonth = sesiDate.getMonth();
-
-  // Fetch sessions dari Sheet untuk highlight tanggal
   dpSessions = new Set();
   try {
     const r = await api('getSessions');
     if (r.status === 'ok') {
-      const sessions = JSON.parse(r.sessions);
-      sessions.forEach(s => {
-        const parsed = parseSesiStr(s);
-        if (parsed) dpSessions.add(parsed.d + '-' + parsed.m + '-' + parsed.y);
+      JSON.parse(r.sessions).forEach(s => {
+        const p = parseSesiStr(s);
+        if (p) dpSessions.add(p.d + '-' + p.m + '-' + p.y);
       });
     }
-  } catch(e) { /* silent fail, just won't highlight */ }
-
+  } catch(e) {}
   renderDateGrid();
   $('dateOverlay').classList.add('open');
 }
 
-// Parse "26Mei2026" → {d:26, m:4, y:2026} (m = 0-indexed)
 function parseSesiStr(s) {
-  const match = s.match(/^(\d{1,2})([A-Za-z]+)(\d{4})$/);
-  if (!match) return null;
-  const d = parseInt(match[1]);
-  const mIdx = BL.findIndex(b => b.toLowerCase() === match[2].toLowerCase());
-  const y = parseInt(match[3]);
+  const m = s.match(/^(\d{1,2})([A-Za-z]+)(\d{4})$/);
+  if (!m) return null;
+  const d    = parseInt(m[1]);
+  const mIdx = BL.findIndex(b => b.toLowerCase() === m[2].toLowerCase());
+  const y    = parseInt(m[3]);
   if (mIdx === -1 || isNaN(d) || isNaN(y)) return null;
   return { d, m: mIdx, y };
 }
@@ -653,73 +695,52 @@ function dateNavMonth(delta) {
 
 function renderDateGrid() {
   $('dateNavLabel').textContent = BL_FULL[dpMonth] + ' ' + dpYear;
-
-  const today   = new Date();
-  const todayD  = today.getDate();
-  const todayM  = today.getMonth();
-  const todayY  = today.getFullYear();
-  const selD    = sesiDate.getDate();
-  const selM    = sesiDate.getMonth();
-  const selY    = sesiDate.getFullYear();
-
-  const firstDay    = new Date(dpYear, dpMonth, 1).getDay();
-  const daysInMonth = new Date(dpYear, dpMonth + 1, 0).getDate();
-
+  const today        = new Date();
+  const firstDay     = new Date(dpYear, dpMonth, 1).getDay();
+  const daysInMonth  = new Date(dpYear, dpMonth + 1, 0).getDate();
   let html = '';
   for (let i = 0; i < firstDay; i++) html += '<div class="date-cell empty"></div>';
-
   for (let d = 1; d <= daysInMonth; d++) {
-    const isToday  = d === todayD && dpMonth === todayM && dpYear === todayY;
-    const isSel    = d === selD   && dpMonth === selM   && dpYear === selY;
-    const hasSesi  = dpSessions.has(d + '-' + dpMonth + '-' + dpYear);
+    const isToday = d === today.getDate() && dpMonth === today.getMonth() && dpYear === today.getFullYear();
+    const isSel   = d === sesiDate.getDate() && dpMonth === sesiDate.getMonth() && dpYear === sesiDate.getFullYear();
+    const hasSesi = dpSessions.has(d + '-' + dpMonth + '-' + dpYear);
     let cls = 'date-cell';
     if (isToday)  cls += ' today';
     if (isSel)    cls += ' selected';
     if (hasSesi)  cls += ' has-sesi';
-    // dot indicator jika ada sesi tapi belum selected
-    const dot = hasSesi && !isSel
-      ? '<span class="date-dot"></span>'
-      : '';
+    const dot = hasSesi && !isSel ? '<span class="date-dot"></span>' : '';
     html += `<div class="${cls}" onclick="pickDate(${d},${dpMonth},${dpYear})">${d}${dot}</div>`;
   }
   $('dateGrid').innerHTML = html;
 }
 
 function pickDate(d, m, y) {
-  const newStr = d + BL[m] + y;
+  const newStr     = d + BL[m] + y;
   const dateChanged = newStr !== sesiStr;
-
   sesiDate = new Date(y, m, d);
   sesiStr  = newStr;
   updateSesiUI();
-
   if (dateChanged) {
-    // Tanggal beda → reset stocks, mulai bersih
     stocks = {};
     save();
     render();
     const hasSesi = dpSessions.has(d + '-' + m + '-' + y);
     closeOverlay(null, 'dateOverlay');
-    if (hasSesi) {
-      // Tawari load sesi lama
-      toast('📅 ' + sesiStr + ' · Ada sesi tersimpan — ketuk LOAD untuk lanjutkan', 'inf');
-    } else {
-      toast('📅 Sesi baru: ' + sesiStr, 'inf');
-    }
+    toast(hasSesi
+      ? '📅 ' + sesiStr + ' · Ada sesi tersimpan — ketuk LOAD'
+      : '📅 Sesi baru: ' + sesiStr, 'inf');
   } else {
-    // Tanggal sama → tidak reset
     save();
     closeOverlay(null, 'dateOverlay');
   }
 }
 
 // ══════════════════════════════════════════════════════
-// API HELPER — fetch ke Apps Script
+// API HELPER
 // ══════════════════════════════════════════════════════
 async function api(action, params = {}) {
-  if (!API_URL || API_URL === 'GANTI_DENGAN_URL_APPS_SCRIPT_KAMU') {
-    throw new Error('API_URL belum diisi! Buka index.html dan ganti API_URL dulu.');
-  }
+  if (!API_URL || API_URL === 'GANTI_DENGAN_URL_APPS_SCRIPT_KAMU')
+    throw new Error('API_URL belum diisi!');
   const url = new URL(API_URL);
   url.searchParams.set('action', action);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
@@ -730,81 +751,51 @@ async function api(action, params = {}) {
 
 // ══════════════════════════════════════════════════════
 // LOAD MASTER ITEMS
-// Cache di localStorage, refresh manual via tombol
 // ══════════════════════════════════════════════════════
 async function loadItems(forceRefresh = false) {
-  // Cek cache dulu
   if (!forceRefresh) {
-    const cached = lsGet(LS.items, null);
+    const cached     = lsGet(LS.items, null);
     const cachedKats = lsGet(LS.kats, null);
     if (cached && cached.length > 0) {
-      IT = cached;
-      KATS = cachedKats || [];
-      buildToolbar();
-      render();
-      return;
+      IT = cached; KATS = cachedKats || [];
+      buildToolbar(); render(); return;
     }
   }
-
   $('list').innerHTML = '<div class="loading"><div class="spin-lg" style="display:inline-block"></div><p>Memuat data dari server...</p></div>';
-
-  // Cek API_URL dulu
   if (!API_URL || API_URL === 'GANTI_DENGAN_URL_APPS_SCRIPT_KAMU') {
-    $('list').innerHTML = `
-      <div class="cfg-banner">
-        <b>⚠️ API URL belum dikonfigurasi</b>
-        Buka file <code>index.html</code>, cari baris <code>const API_URL =</code>
-        dan ganti dengan URL deploy Apps Script kamu.
-        <code>const API_URL = 'https://script.google.com/macros/s/XXXXX/exec';</code>
-      </div>`;
-    return;
+    $('list').innerHTML = `<div class="cfg-banner">
+      <b>⚠️ API URL belum dikonfigurasi</b>
+      Buka file <code>index.html</code> dan ganti <code>const API_URL</code>.
+    </div>`; return;
   }
-
   try {
     const r = await api('loadMasterItems');
     if (r.status !== 'ok') throw new Error(r.message);
     IT = JSON.parse(r.data);
     lsSet(LS.items, IT);
-
     const r2 = await api('getKategoriList');
     KATS = r2.status === 'ok' ? JSON.parse(r2.data) : [];
     lsSet(LS.kats, KATS);
-
-    buildToolbar();
-    render();
+    buildToolbar(); render();
     if (forceRefresh) toast('✅ Data diperbarui: ' + IT.length + ' item', 'ok');
   } catch (err) {
     $('list').innerHTML = `<div class="cfg-banner">
-      <b>❌ Gagal load data</b>
-      ${err.message}
+      <b>❌ Gagal load data</b>${err.message}
       <code>Pastikan API_URL benar dan Apps Script sudah di-deploy ulang</code>
     </div>`;
   }
 }
-
-async function refreshItems() {
-  // Hanya refresh master items dari Sheet, TIDAK reset stocks
-  await loadItems(true);
-}
+async function refreshItems() { await loadItems(true); }
 
 // ══════════════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════════════
 function $(id) { return document.getElementById(id); }
 
-const EM = {
-  PERTAMINA:'⛽', SHELL:'🐚', CASTROL:'🛢', YAMALUBE:'🔷',
-  'AHM MPX':'🏍', MOTUL:'⚡', EVALUBE:'♻', FEDERAL:'🇺🇸',
-  IDEMITSU:'🇯🇵', JUMBO:'📦', LONG:'🔧', MEGACOOL:'❄',
-  PRESTIGE:'⭐', TMO:'🚗', INDOTIRE:'⭕', GS:'🔋',
-  YUASA:'🔋', INDOPART:'🔋', NGK:'🔥', TOYOTA:'🔥',
-  DENSO:'🔥', DAIHATSU:'🔥', FLEMMO:'🛞',
-};
-
 function getMerks() {
   const items = catFilter ? IT.filter(i => i.kategori === catFilter) : IT;
-  const all = [...new Set(items.map(i => i.merk))].sort();
-  const pi = all.indexOf('PERTAMINA');
+  const all   = [...new Set(items.map(i => i.merk))].sort();
+  const pi    = all.indexOf('PERTAMINA');
   if (pi > 0) { all.splice(pi, 1); all.unshift('PERTAMINA'); }
   return all;
 }
@@ -818,49 +809,46 @@ function calc(plu) {
   if (!d) return null;
   if ((d.dos === '' || d.dos == null) && (d.pcs === '' || d.pcs == null)) return null;
   const item = IT.find(i => i.plu === plu);
-  const pd = item ? (parseFloat(item.perDos) || 1) : 1;
+  const pd   = item ? (parseFloat(item.perDos) || 1) : 1;
   return (parseFloat(d.dos) || 0) * pd + (parseFloat(d.pcs) || 0);
 }
 function filled(plu) {
   const d = stocks[plu];
   return d && ((d.dos != null && d.dos !== '') || (d.pcs != null && d.pcs !== ''));
 }
-function merkTot(m) {
-  return byMerk(m).reduce((s, i) => { const t = calc(i.plu); return s + (t || 0); }, 0);
-}
-function statDone() {
+function merkTot(m)  { return byMerk(m).reduce((s, i) => s + (calc(i.plu) || 0), 0); }
+function statDone()  {
   const pool = catFilter ? IT.filter(i => i.kategori === catFilter) : IT;
   return pool.filter(i => filled(i.plu)).length;
 }
-function statTotal() {
-  return catFilter ? IT.filter(i => i.kategori === catFilter).length : IT.length;
-}
-function statPCS() {
-  return getMerks().reduce((s, m) => s + merkTot(m), 0);
-}
+function statTotal() { return catFilter ? IT.filter(i => i.kategori === catFilter).length : IT.length; }
+function statPCS()   { return getMerks().reduce((s, m) => s + merkTot(m), 0); }
 
 // ══════════════════════════════════════════════════════
 // TOOLBAR
 // ══════════════════════════════════════════════════════
 function buildToolbar() {
-  const base = `
-    <button class="tb${catFilter===''?' on':''}" id="fAll" onclick="setCat('')">📋 Semua</button>`;
   const katBtns = KATS.map(k =>
     `<button class="tb${catFilter===k?' on':''}" onclick="setCat('${k}')">${k}</button>`
   ).join('');
-  const rest = `
+  $('toolbar').innerHTML = `
+    <button class="tb${catFilter===''?' on':''}" onclick="setCat('')">📋 Semua</button>
+    ${katBtns}
+    <div class="tb-sep"></div>
+    <button class="tb${showBelumDiisi?' on':''}" id="btnBelum" onclick="toggleBelumDiisi()">
+      ⚠️ Belum: <b id="belumCount">0</b>
+    </button>
     <div class="tb-sep"></div>
     <button class="tb" id="btnExp" onclick="expandAll()">▼ Buka Semua</button>
     <div class="tb-sep"></div>
     <button class="tb" onclick="refreshItems()">🔄 Refresh Data</button>`;
-  $('toolbar').innerHTML = base + katBtns + rest;
 }
 
 function setCat(k) {
   catFilter = k;
+  showBelumDiisi = false;
   if (k) getMerks().forEach(m => expanded.add(m));
-  buildToolbar();
-  render();
+  buildToolbar(); render();
 }
 
 function expandAll() {
@@ -872,32 +860,45 @@ function expandAll() {
   render();
 }
 
+function toggleBelumDiisi() {
+  showBelumDiisi = !showBelumDiisi;
+  if (showBelumDiisi) getMerks().forEach(m => expanded.add(m));
+  buildToolbar(); render();
+}
+
 // ══════════════════════════════════════════════════════
 // RENDER
 // ══════════════════════════════════════════════════════
 function render() {
   if (!IT.length) return;
-  const merks = getMerks();
-  const fq = searchQ.toLowerCase();
-  const forceOpen = !!searchQ || !!catFilter || allExp;
+  const merks    = getMerks();
+  const fq       = searchQ.toLowerCase();
+  const forceOpen = !!searchQ || !!catFilter || allExp || showBelumDiisi;
   let html = '';
 
   for (const m of merks) {
     let items = byMerk(m);
+
+    // filter search
     if (fq) items = items.filter(i =>
       i.plu.toLowerCase().includes(fq) ||
       i.nama.toLowerCase().includes(fq) ||
-      (i.barcode && i.barcode.toLowerCase().includes(fq))
+      (i.barcode    && i.barcode.toLowerCase().includes(fq)) ||
+      (i.barcodeDus && i.barcodeDus.toLowerCase().includes(fq))
     );
+
+    // filter belum diisi
+    if (showBelumDiisi) items = items.filter(i => !filled(i.plu));
+
     if (!items.length) continue;
 
-    const fc = byMerk(m).filter(i => filled(i.plu)).length;
-    const tot = byMerk(m).length;
-    const mpcs = merkTot(m);
+    const fc      = byMerk(m).filter(i => filled(i.plu)).length;
+    const tot     = byMerk(m).length;
+    const mpcs    = merkTot(m);
     const allDone = fc === tot && tot > 0;
-    const isOpen = forceOpen || expanded.has(m);
-    const em = items[0]?.ikon || EM[m] || '🛢';
-    const isTop = m === 'PERTAMINA';
+    const isOpen  = forceOpen || expanded.has(m);
+    const em      = items[0]?.ikon || '🛢';
+    const isTop   = m === 'PERTAMINA';
 
     html += `<div class="brand-grp">
 <div class="brand-hdr${isTop?' top':''}" onclick="toggleBrand('${m.replace(/'/g,"\\'")}',this)">
@@ -907,7 +908,7 @@ function render() {
     <div class="b-count">${fc}/${tot} terisi${items.length!==tot?' · '+items.length+' tampil':''}</div>
   </div>
   <div class="b-right">
-    ${allDone ? '<span class="b-dot"></span>' : ''}
+    ${allDone?'<span class="b-dot"></span>':''}
     <span class="b-pcs">${mpcs.toLocaleString('id-ID')}</span>
     <span class="b-arr${isOpen?' open':''}">▼</span>
   </div>
@@ -915,50 +916,51 @@ function render() {
 <div class="brand-items${isOpen?' open':''}">`;
 
     for (const i of items) {
-      const d = stocks[i.plu];
-      const dv = d?.dos ?? '';
-      const pv = d?.pcs ?? '';
-      const t = calc(i.plu);
-      const ok = filled(i.plu);
+      const d   = stocks[i.plu];
+      const dv  = d?.dos ?? '';
+      const pv  = d?.pcs ?? '';
+      const t   = calc(i.plu);
+      const ok  = filled(i.plu);
       const catTag = i.kategori && i.kategori !== 'Oli'
         ? `<span class="i-cat">${i.kategori}</span>` : '';
 
+      const barcodeInfo =
+        (i.barcode    ? ` · 🔹<small>${i.barcode}</small>`    : '') +
+        (i.barcodeDus ? ` · 📦<small>${i.barcodeDus}</small>` : '');
+
       html += `<div class="item${ok?' done':''}">
   <div class="item-top">
-    <span class="i-badge" onclick="doSearch('${i.plu}')">${i.plu}</span>
+    <span class="i-badge" onclick="doSearch('${i.plu.replace(/'/g,"\\'")}'">${i.plu}</span>
     <div class="i-meta">
       <div class="i-nama">${i.nama}${catTag}</div>
-      <div class="i-detail">Isi ${i.isi} · ${i.perDos} pcs/dos${
-  i.barcode    ? ' · 🔹<small>'+i.barcode+'</small>'    : ''
-}${
-  i.barcodeDus ? ' · 📦<small>'+i.barcodeDus+'</small>' : ''
-}</div>
+      <div class="i-detail">Isi ${i.isi} · ${i.perDos} pcs/dos${barcodeInfo}</div>
     </div>
+    ${ok?`<button class="i-reset" onclick="resetItem('${i.plu.replace(/'/g,"\\'")}',this)" type="button" title="Reset item">×</button>`:''}
   </div>
   <div class="i-inputs">
     <div class="inp-grp">
       <div class="inp-lbl">DOS</div>
       <div class="inp-wrap">
-        <button class="inp-step" onclick="step('${i.plu}','dos',-1)" type="button">−</button>
+        <button class="inp-step" onclick="step('${i.plu.replace(/'/g,"\\'")}','dos',-1)" type="button">−</button>
         <input class="inp-num" type="number" inputmode="numeric" min="0" step="1"
           data-plu="${i.plu}" data-f="dos" value="${dv}" placeholder="0"
           oninput="onInp(this)" onfocus="this.select()">
-        <button class="inp-step" onclick="step('${i.plu}','dos',1)" type="button">+</button>
+        <button class="inp-step" onclick="step('${i.plu.replace(/'/g,"\\'")}','dos',1)" type="button">+</button>
       </div>
     </div>
     <div class="inp-div"></div>
     <div class="inp-grp">
       <div class="inp-lbl">PCS</div>
       <div class="inp-wrap">
-        <button class="inp-step" onclick="step('${i.plu}','pcs',-1)" type="button">−</button>
+        <button class="inp-step" onclick="step('${i.plu.replace(/'/g,"\\'")}','pcs',-1)" type="button">−</button>
         <input class="inp-num" type="number" inputmode="numeric" min="0" step="1"
           data-plu="${i.plu}" data-f="pcs" value="${pv}" placeholder="0"
           oninput="onInp(this)" onfocus="this.select()">
-        <button class="inp-step" onclick="step('${i.plu}','pcs',1)" type="button">+</button>
+        <button class="inp-step" onclick="step('${i.plu.replace(/'/g,"\\'")}','pcs',1)" type="button">+</button>
       </div>
     </div>
     <div class="i-tot${t===null||t===0?' zero':''}">
-      <div class="tot-n">${t !== null ? t : '—'}</div>
+      <div class="tot-n">${t!==null?t:'—'}</div>
       <div class="tot-l">PCS</div>
     </div>
   </div>
@@ -968,8 +970,8 @@ function render() {
   }
 
   if (!html) html = `<div class="empty">
-    <div class="empty-ico">${searchQ ? '🔍' : catFilter ? '📦' : '✅'}</div>
-    <p>${searchQ ? 'Tidak ditemukan: "'+searchQ+'"' : 'Tidak ada item'}</p>
+    <div class="empty-ico">${searchQ?'🔍':catFilter?'📦':showBelumDiisi?'✅':'📋'}</div>
+    <p>${searchQ?'Tidak ditemukan: "'+searchQ+'"':showBelumDiisi?'Semua item sudah diisi!':'Tidak ada item'}</p>
   </div>`;
 
   $('list').innerHTML = html;
@@ -977,18 +979,27 @@ function render() {
 }
 
 function updateStats() {
-  const done = statDone(), total = statTotal(), pcs = statPCS();
-  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  const done  = statDone();
+  const total = statTotal();
+  const pcs   = statPCS();
+  const pct   = total > 0 ? Math.round(done / total * 100) : 0;
   $('progFill').style.width = pct + '%';
   $('sDone').textContent = done;
   $('sTotal').textContent = total;
-  $('sPct').textContent = pct + '%';
-  $('sPcs').textContent = pcs.toLocaleString('id-ID');
+  $('sPct').textContent   = pct + '%';
+  $('sPcs').textContent   = pcs.toLocaleString('id-ID');
   $('hdrSub').textContent =
     IT.length + ' item · ' + getMerks().length + ' merk · ' +
     done + ' terisi · ' + pcs.toLocaleString('id-ID') + ' PCS' +
-    (catFilter ? ' · ' + catFilter : '') +
-    (namaAktif ? ' · ' + namaAktif : '');
+    (catFilter  ? ' · ' + catFilter  : '') +
+    (namaAktif  ? ' · ' + namaAktif  : '');
+
+  // update belum count
+  const belumEl = $('belumCount');
+  if (belumEl) {
+    const pool = catFilter ? IT.filter(i => i.kategori === catFilter) : IT;
+    belumEl.textContent = pool.filter(i => !filled(i.plu)).length;
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -996,9 +1007,9 @@ function updateStats() {
 // ══════════════════════════════════════════════════════
 function toggleBrand(m, hdr) {
   const items = hdr.nextElementSibling;
-  const arr = hdr.querySelector('.b-arr');
+  const arr   = hdr.querySelector('.b-arr');
   if (expanded.has(m)) { expanded.delete(m); items.classList.remove('open'); arr.classList.remove('open'); }
-  else { expanded.add(m); items.classList.add('open'); arr.classList.add('open'); }
+  else                 { expanded.add(m);    items.classList.add('open');    arr.classList.add('open'); }
 }
 
 function onInp(inp) {
@@ -1009,12 +1020,27 @@ function onInp(inp) {
   save();
   const card = inp.closest('.item');
   if (card) {
-    const t = calc(plu);
+    const t  = calc(plu);
     const tn = card.querySelector('.tot-n');
     const tw = card.querySelector('.i-tot');
     if (tn) tn.textContent = t !== null ? t : '—';
     if (tw) tw.classList.toggle('zero', t === null || t === 0);
     card.classList.toggle('done', filled(plu));
+    // Tampilkan/sembunyikan tombol reset
+    const existReset = card.querySelector('.i-reset');
+    const itemTop    = card.querySelector('.item-top');
+    const item       = IT.find(i => i.plu === plu);
+    if (filled(plu) && !existReset && itemTop) {
+      const rb = document.createElement('button');
+      rb.className = 'i-reset';
+      rb.type      = 'button';
+      rb.title     = 'Reset item';
+      rb.textContent = '×';
+      rb.onclick = function() { resetItem(plu, rb); };
+      itemTop.appendChild(rb);
+    } else if (!filled(plu) && existReset) {
+      existReset.remove();
+    }
   }
   updateStats();
 }
@@ -1026,8 +1052,33 @@ function step(plu, f, delta) {
   inp.dispatchEvent(new Event('input'));
 }
 
+function resetItem(plu, btn) {
+  const item = IT.find(i => i.plu === plu);
+  const nama = item ? item.nama : plu;
+  if (!confirm('Reset stok "' + nama + '"?')) return;
+  if (stocks[plu]) {
+    addUndoLog(plu, 'dos', nama);
+    addUndoLog(plu, 'pcs', nama);
+  }
+  delete stocks[plu];
+  save();
+  const card = btn ? btn.closest('.item') : null;
+  if (card) {
+    card.classList.remove('done');
+    card.querySelectorAll('.inp-num').forEach(inp => { inp.value = ''; });
+    const tn = card.querySelector('.tot-n');
+    const tw = card.querySelector('.i-tot');
+    if (tn) tn.textContent = '—';
+    if (tw) tw.classList.add('zero');
+    const rb = card.querySelector('.i-reset');
+    if (rb) rb.remove();
+  }
+  updateStats();
+  toast('🗑 Reset: ' + nama, 'inf');
+}
+
 let srchTimer;
-$('srch').addEventListener('input', function () {
+$('srch').addEventListener('input', function() {
   clearTimeout(srchTimer);
   srchTimer = setTimeout(() => {
     searchQ = this.value.trim();
@@ -1045,7 +1096,27 @@ function doSearch(q) {
 }
 
 // ══════════════════════════════════════════════════════
-// BARCODE SCAN
+// UNDO
+// ══════════════════════════════════════════════════════
+function addUndoLog(plu, field, nama) {
+  const prevVal = stocks[plu] ? String(stocks[plu][field] || '') : '';
+  undoStack.push({ plu, field, nama, prevVal });
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+}
+
+function undoLast() {
+  if (!undoStack.length) { toast('Tidak ada yang bisa di-undo', 'err'); return; }
+  const last = undoStack.pop();
+  if (!stocks[last.plu]) stocks[last.plu] = { dos: '', pcs: '' };
+  stocks[last.plu][last.field] = last.prevVal;
+  if (stocks[last.plu].dos === '' && stocks[last.plu].pcs === '') delete stocks[last.plu];
+  save();
+  updateItemUI(last.plu, last.field);
+  toast('↩ Undo: ' + last.nama + ' · ' + last.field.toUpperCase() + ' dikembalikan', 'inf');
+}
+
+// ══════════════════════════════════════════════════════
+// BARCODE SCAN — Continuous + Cooldown + Counter
 // ══════════════════════════════════════════════════════
 async function scanBarcode() {
   if (!window.Html5Qrcode) {
@@ -1058,195 +1129,300 @@ async function scanBarcode() {
     });
   }
 
+  scanSessionLog = [];
+
   const overlay = document.createElement('div');
   overlay.style.cssText = `position:fixed;inset:0;background:#000;z-index:9999;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px`;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:16px;gap:12px;overflow-y:auto`;
   overlay.innerHTML = `
     <div id="qr-reader" style="width:100%;max-width:400px;border-radius:12px;overflow:hidden"></div>
-    <div style="color:#fff;margin:16px;font-size:14px;opacity:.7;text-align:center">
-      📷 Arahkan kamera ke barcode / QR Code
+
+    <div id="scanInfo" style="width:100%;max-width:400px;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+      border-radius:10px;padding:12px 14px;display:none">
+      <div style="font-size:10px;color:#7d8590;font-weight:700;
+        text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Terakhir Discan</div>
+      <div id="scanLastName"   style="font-size:15px;font-weight:700;color:#fff;margin-bottom:2px">—</div>
+      <div id="scanLastDetail" style="font-size:12px;color:#7d8590">—</div>
     </div>
-    <button id="btnScanCancel" style="padding:12px 32px;border-radius:8px;
-      background:#e85d00;color:#fff;border:none;font-size:16px;
-      font-weight:700;cursor:pointer;font-family:inherit">✕ Batal</button>`;
+
+    <div style="display:flex;gap:10px;width:100%;max-width:400px">
+      <div style="flex:1;background:rgba(255,107,0,.1);border:1px solid rgba(255,107,0,.25);
+        border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:#ff6b00;font-weight:700;
+          text-transform:uppercase;letter-spacing:1px">Total Scan</div>
+        <div id="scanCount" style="font-size:22px;font-weight:900;color:#ff6b00;
+          font-family:'Barlow Condensed',sans-serif">0</div>
+      </div>
+      <div style="flex:1;background:rgba(57,211,83,.07);border:1px solid rgba(57,211,83,.2);
+        border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:#39d353;font-weight:700;
+          text-transform:uppercase;letter-spacing:1px">Item Unik</div>
+        <div id="scanUniq" style="font-size:22px;font-weight:900;color:#39d353;
+          font-family:'Barlow Condensed',sans-serif">0</div>
+      </div>
+    </div>
+
+    <div style="color:#7d8590;font-size:13px;text-align:center">
+      📷 Arahkan kamera ke barcode · Kamera tetap aktif
+    </div>
+    <button id="btnScanCancel" style="width:100%;max-width:400px;padding:14px;
+      border-radius:10px;background:#e85d00;color:#fff;border:none;
+      font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;
+      letter-spacing:.5px">✕ SELESAI SCAN</button>`;
+
   document.body.appendChild(overlay);
 
   let scanner;
-
   const cleanup = async () => {
     try { if (scanner) await scanner.stop(); } catch(e) {}
     if (overlay.parentNode) overlay.remove();
+    scanCooldown = {};
+  };
+  document.getElementById('btnScanCancel').onclick = cleanup;
+
+  const updateScanCounter = () => {
+    const countEl = document.getElementById('scanCount');
+    const uniqEl  = document.getElementById('scanUniq');
+    if (countEl) countEl.textContent = scanSessionLog.length;
+    if (uniqEl)  uniqEl.textContent  = new Set(scanSessionLog.map(l => l.plu)).size;
   };
 
-  document.getElementById('btnScanCancel').onclick = cleanup;
+  const updateScanInfo = (nama, detail, type) => {
+    const info   = document.getElementById('scanInfo');
+    const nameEl = document.getElementById('scanLastName');
+    const detEl  = document.getElementById('scanLastDetail');
+    if (!info || !nameEl || !detEl) return;
+    info.style.display      = 'block';
+    nameEl.textContent      = nama;
+    detEl.textContent       = detail;
+    info.style.borderColor  = type==='dus' ? 'rgba(255,107,0,.4)'
+                            : type==='pcs' ? 'rgba(88,166,255,.4)'
+                            : 'rgba(248,81,73,.4)';
+    nameEl.style.color      = type==='dus' ? '#ff6b00'
+                            : type==='pcs' ? '#58a6ff'
+                            : '#f85149';
+  };
 
   try {
     scanner = new Html5Qrcode('qr-reader');
-
     const formats = [
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.CODE_128,
-      Html5QrcodeSupportedFormats.CODE_39,
-      Html5QrcodeSupportedFormats.UPC_A,
-      Html5QrcodeSupportedFormats.UPC_E,
-      Html5QrcodeSupportedFormats.QR_CODE,      // ← QR support
-      Html5QrcodeSupportedFormats.DATA_MATRIX,
+      Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.DATA_MATRIX,
     ];
-
     await scanner.start(
       { facingMode: 'environment' },
       { fps: 15, qrbox: { width: 280, height: 120 }, aspectRatio: 1.5, formatsToSupport: formats },
       async (decodedText) => {
-        await cleanup();           // stop kamera dulu
-        vibrate();                 // getar
-        beep();                    // bunyi
-        handleBarcode(decodedText); // baru proses hasil
+        const now = Date.now();
+        // Cooldown anti-double
+        if (scanCooldown[decodedText] && now - scanCooldown[decodedText] < SCAN_COOLDOWN_MS) return;
+        scanCooldown[decodedText] = now;
+        vibrate();
+        const result = handleBarcodeContinuous(decodedText);
+        if (result && result.plu) {
+          scanSessionLog.push({ plu: result.plu, nama: result.nama, type: result.type, time: new Date() });
+          updateScanCounter();
+          updateScanInfo(
+            (result.type==='dus'?'📦 ':result.type==='pcs'?'🔹 ':'❓ ') + result.nama,
+            result.detail, result.type
+          );
+        }
+        beepType(result ? result.type : 'error');
       },
-      () => {}                     // per-frame error → abaikan
+      () => {}
     );
-
-  } catch (e) {
+  } catch(e) {
     await cleanup();
     const code = prompt('📷 Kamera tidak bisa dibuka. Masukkan barcode manual:');
-    if (code) handleBarcode(code);
+    if (code) handleBarcodeContinuous(code);
   }
 }
 
-function handleBarcode(code) {
-  if (!code) return;
-  const trimmed = code.trim();
-
-  // ── Cari item: cek barcodeDus dulu, lalu barcode satuan, lalu PLU ──
+// ── Handler continuous scan ──
+function handleBarcodeContinuous(code) {
+  if (!code) return null;
+  const trimmed    = code.trim();
   const foundByDus = IT.find(i => i.barcodeDus && i.barcodeDus === trimmed);
   const foundBySat = IT.find(i => i.barcode    && i.barcode    === trimmed);
   const foundByPlu = IT.find(i => i.plu === trimmed);
 
   if (foundByDus) {
-    // ── SCAN DUS → +1 DOS ──
     const plu = foundByDus.plu;
     if (!stocks[plu]) stocks[plu] = { dos: '', pcs: '' };
+    addUndoLog(plu, 'dos', foundByDus.nama);
     stocks[plu].dos = String((parseFloat(stocks[plu].dos) || 0) + 1);
     save();
-
-    const inp = document.querySelector(
-      `input[data-plu="${CSS.escape(plu)}"][data-f="dos"]`
-    );
-    if (inp) {
-      inp.value = stocks[plu].dos;
-      inp.dispatchEvent(new Event('input'));
-    } else {
-      getMerks().forEach(m => {
-        if (byMerk(m).find(i => i.plu === plu)) expanded.add(m);
-      });
-      render();
-    }
-
-    scrollToItem(plu);
-
-    const srchEl = document.getElementById('srch');
-    if (srchEl) {
-      srchEl.value = foundByDus.nama;
-      srchEl.dispatchEvent(new Event('input'));
-    }
-
-    toast('📦 DUS +1 → ' + foundByDus.nama +
-          ' · Total DOS: ' + stocks[plu].dos, 'ok');
+    addRiwayat(plu, foundByDus.nama, 'dus', 'dos', stocks[plu].dos);
+    updateItemUI(plu, 'dos');
+    toast('📦 DUS +1 → ' + foundByDus.nama + ' · DOS: ' + stocks[plu].dos, 'ok');
+    return { plu, type:'dus', nama:foundByDus.nama,
+      detail:'DOS: '+stocks[plu].dos+' · PCS: '+(stocks[plu].pcs||0) };
 
   } else if (foundBySat) {
-    // ── SCAN SATUAN → +1 PCS ──
     const plu = foundBySat.plu;
     if (!stocks[plu]) stocks[plu] = { dos: '', pcs: '' };
+    addUndoLog(plu, 'pcs', foundBySat.nama);
     stocks[plu].pcs = String((parseFloat(stocks[plu].pcs) || 0) + 1);
     save();
-
-    const inp = document.querySelector(
-      `input[data-plu="${CSS.escape(plu)}"][data-f="pcs"]`
-    );
-    if (inp) {
-      inp.value = stocks[plu].pcs;
-      inp.dispatchEvent(new Event('input'));
-    } else {
-      getMerks().forEach(m => {
-        if (byMerk(m).find(i => i.plu === plu)) expanded.add(m);
-      });
-      render();
-    }
-
-    scrollToItem(plu);
-
-    const srchEl = document.getElementById('srch');
-    if (srchEl) {
-      srchEl.value = foundBySat.nama;
-      srchEl.dispatchEvent(new Event('input'));
-    }
-
-    toast('🔹 PCS +1 → ' + foundBySat.nama +
-          ' · Total PCS: ' + stocks[plu].pcs, 'ok');
+    addRiwayat(plu, foundBySat.nama, 'pcs', 'pcs', stocks[plu].pcs);
+    updateItemUI(plu, 'pcs');
+    toast('🔹 PCS +1 → ' + foundBySat.nama + ' · PCS: ' + stocks[plu].pcs, 'ok');
+    return { plu, type:'pcs', nama:foundBySat.nama,
+      detail:'DOS: '+(stocks[plu].dos||0)+' · PCS: '+stocks[plu].pcs };
 
   } else if (foundByPlu) {
-    // ── COCOK PLU → highlight item, user input manual ──
-    const srchEl = document.getElementById('srch');
-    if (srchEl) {
-      srchEl.value = foundByPlu.plu;
-      srchEl.dispatchEvent(new Event('input'));
-    }
-    getMerks().forEach(m => expanded.add(m));
-    render();
-    scrollToItem(foundByPlu.plu);
     toast('📋 ' + foundByPlu.nama + ' — isi manual', 'inf');
+    return { plu:foundByPlu.plu, type:'plu', nama:foundByPlu.nama, detail:'Input manual' };
 
   } else {
-    // ── TIDAK DITEMUKAN ──
-    const srchEl = document.getElementById('srch');
-    if (srchEl) {
-      srchEl.value = trimmed;
-      srchEl.dispatchEvent(new Event('input'));
-    }
-    getMerks().forEach(m => expanded.add(m));
-    render();
-    toast('❓ Barcode tidak ditemukan: ' + trimmed, 'err');
+    toast('❓ Tidak ditemukan: ' + trimmed, 'err');
+    return { plu:'', type:'error', nama:trimmed, detail:'Barcode tidak ada di master' };
   }
 }
+
+// ── Update DOM item tanpa full re-render ──
+function updateItemUI(plu, field) {
+  const inp = document.querySelector(`input[data-plu="${CSS.escape(plu)}"][data-f="${field}"]`);
+  if (inp) {
+    inp.value = stocks[plu][field];
+    inp.dispatchEvent(new Event('input'));
+    scrollToItem(plu);
+  } else {
+    getMerks().forEach(m => { if (byMerk(m).find(i => i.plu === plu)) expanded.add(m); });
+    render();
+    setTimeout(() => scrollToItem(plu), 150);
+  }
+}
+
+// ── Scroll & highlight item ──
 function scrollToItem(plu) {
   setTimeout(() => {
-    const inp = document.querySelector(
-      `input[data-plu="${CSS.escape(plu)}"][data-f="dos"]`
-    );
-    if (inp) {
-      const card = inp.closest('.item');
-      if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        card.style.transition = 'box-shadow .2s';
-        card.style.boxShadow = '0 0 0 2px var(--fire)';
-        setTimeout(() => { card.style.boxShadow = ''; }, 1200);
-      }
-    }
+    const inp = document.querySelector(`input[data-plu="${CSS.escape(plu)}"][data-f="dos"]`);
+    if (!inp) return;
+    const card = inp.closest('.item');
+    if (!card) return;
+    card.scrollIntoView({ behavior:'smooth', block:'center' });
+    card.style.transition  = 'box-shadow .2s';
+    card.style.boxShadow   = '0 0 0 2px var(--fire)';
+    setTimeout(() => { card.style.boxShadow = ''; }, 1200);
   }, 100);
 }
 
-// ── Feedback: getar ──
-function vibrate() {
+// ── handleBarcode lama (untuk fallback manual input) ──
+function handleBarcode(code) { handleBarcodeContinuous(code); }
+
+// ══════════════════════════════════════════════════════
+// SOUND
+// ══════════════════════════════════════════════════════
+function beepType(type) {
   try {
-    if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    if (type === 'dus') {
+      osc.type = 'sine'; osc.frequency.value = 1400;
+      gain.gain.setValueAtTime(0.35, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
+    } else if (type === 'pcs') {
+      osc.type = 'sine'; osc.frequency.value = 1100;
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.15);
+    } else {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(400, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
+    }
   } catch(e) {}
 }
+function beep() { beepType('pcs'); }
 
-// ── Feedback: beep ──
-function beep() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = 1200;
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.15);
-  } catch(e) {}
+// ══════════════════════════════════════════════════════
+// VIBRATE
+// ══════════════════════════════════════════════════════
+function vibrate() {
+  try { if (navigator.vibrate) navigator.vibrate([60,30,60]); } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════
+// RIWAYAT SCAN
+// ══════════════════════════════════════════════════════
+function loadRiwayat() {
+  riwayatScan = lsGet(LS.riwayat, []);
+  updateRiwayatBadge();
+}
+function saveRiwayat() {
+  if (riwayatScan.length > 100) riwayatScan = riwayatScan.slice(-100);
+  lsSet(LS.riwayat, riwayatScan);
+  updateRiwayatBadge();
+}
+function updateRiwayatBadge() {
+  const badge = $('riwayatBadge');
+  if (!badge) return;
+  const count = riwayatScan.length;
+  badge.style.display = count > 0 ? 'flex' : 'none';
+  badge.textContent   = count > 99 ? '99+' : count;
+}
+function addRiwayat(plu, nama, type, field, val) {
+  riwayatScan.push({ plu, nama, type, field, val, time: new Date().toISOString(), sesi: getSesi() });
+  saveRiwayat();
+}
+function openRiwayat() {
+  const list = $('riwayatList');
+  if (!list) return;
+  if (!riwayatScan.length) {
+    list.innerHTML = `<div style="text-align:center;padding:24px;
+      color:var(--muted);font-size:13px">Belum ada riwayat scan</div>`;
+  } else {
+    list.innerHTML = [...riwayatScan].reverse().map((r, idx) => {
+      const realIdx = riwayatScan.length - 1 - idx;
+      const time    = new Date(r.time);
+      const timeStr = time.getHours().toString().padStart(2,'0') + ':' +
+                      time.getMinutes().toString().padStart(2,'0') + ':' +
+                      time.getSeconds().toString().padStart(2,'0');
+      const ico   = r.type==='dus' ? '📦' : r.type==='pcs' ? '🔹' : '❓';
+      return `<div class="rwi">
+        <div class="rwi-ico">${ico}</div>
+        <div class="rwi-info">
+          <div class="rwi-nama">${r.nama}</div>
+          <div class="rwi-detail">${r.field?r.field.toUpperCase()+': '+r.val+' · ':''}${timeStr} · ${r.sesi}</div>
+        </div>
+        <button class="rwi-undo" onclick="undoRiwayat(${realIdx})" type="button">↩</button>
+      </div>`;
+    }).join('');
+  }
+  $('riwayatOverlay').classList.add('open');
+}
+function undoRiwayat(idx) {
+  const r = riwayatScan[idx];
+  if (!r || !r.plu || !r.field) { toast('Tidak bisa undo item ini', 'err'); return; }
+  if (!stocks[r.plu]) stocks[r.plu] = { dos:'', pcs:'' };
+  const cur    = parseFloat(stocks[r.plu][r.field]) || 0;
+  const newVal = Math.max(0, cur - 1);
+  stocks[r.plu][r.field] = newVal === 0 ? '' : String(newVal);
+  if (stocks[r.plu].dos === '' && stocks[r.plu].pcs === '') delete stocks[r.plu];
+  save();
+  updateItemUI(r.plu, r.field);
+  riwayatScan.splice(idx, 1);
+  saveRiwayat();
+  toast('↩ Undo: ' + r.nama, 'inf');
+  openRiwayat();
+}
+function clearRiwayat() {
+  if (!confirm('Hapus semua riwayat scan?')) return;
+  riwayatScan = [];
+  saveRiwayat();
+  openRiwayat();
+  toast('🗑 Riwayat dihapus', 'inf');
 }
 
 // ══════════════════════════════════════════════════════
@@ -1256,42 +1432,28 @@ async function syncUp() {
   if (statDone() === 0) { toast('Belum ada data diisi', 'err'); return; }
   const btn = $('btnSave');
   btn.innerHTML = '<span class="spin"></span> Menyimpan...';
-  btn.disabled = true;
-
+  btn.disabled  = true;
   const stocksArr = [];
   for (const plu in stocks) {
     const d = stocks[plu];
     if (d.dos === '' && d.pcs === '') continue;
-    const item = IT.find(i => i.plu === plu);
-    const dos = parseFloat(d.dos) || 0;
-    const pcs = parseFloat(d.pcs) || 0;
-    const total = dos * (item ? parseFloat(item.perDos) || 1 : 1) + pcs;
-    stocksArr.push({
-      plu, dos, pcs, total,
-      nama: item?.nama || '',
+    const item  = IT.find(i => i.plu === plu);
+    const dos   = parseFloat(d.dos) || 0;
+    const pcs   = parseFloat(d.pcs) || 0;
+    const total = dos * (item ? parseFloat(item.perDos)||1 : 1) + pcs;
+    stocksArr.push({ plu, dos, pcs, total,
+      nama:     item?.nama     || '',
       kategori: item?.kategori || '',
-      isi: item?.isi || '',
-      perDos: item?.perDos || 1
-    });
+      isi:      item?.isi      || '',
+      perDos:   item?.perDos   || 1 });
   }
-
-  const payload = JSON.stringify({
-    sesi: getSesi(),
-    nama: getNama(),
-    stocks: stocksArr
-  });
-
+  const payload = JSON.stringify({ sesi: getSesi(), nama: getNama(), stocks: stocksArr });
   try {
-    // Encode payload sebagai URL param (Apps Script doGet limitation)
     const r = await api('saveToSheet', { payload });
-    if (r.status === 'ok') toast('✅ Tersimpan! Sesi: ' + getSesi() + ' · ' + stocksArr.length + ' item', 'ok');
-    else toast('❌ ' + (r.message || 'Gagal'), 'err');
-  } catch (e) {
-    toast('❌ ' + e.message, 'err');
-  } finally {
-    btn.innerHTML = '⬆ SIMPAN';
-    btn.disabled = false;
-  }
+    if (r.status === 'ok') toast('✅ Tersimpan! Sesi: '+getSesi()+' · '+stocksArr.length+' item','ok');
+    else toast('❌ ' + (r.message||'Gagal'), 'err');
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+  finally { btn.innerHTML = '⬆ SIMPAN'; btn.disabled = false; }
 }
 
 // ══════════════════════════════════════════════════════
@@ -1301,210 +1463,160 @@ async function openLoad() {
   toast('Memuat daftar sesi...', 'inf');
   try {
     const r = await api('getSessions');
-    if (r.status !== 'ok') { toast('❌ ' + r.message, 'err'); return; }
+    if (r.status !== 'ok') { toast('❌ '+r.message,'err'); return; }
     const sessions = JSON.parse(r.sessions);
-
-    // Selalu ada opsi "Mulai Baru" di paling atas
-    const newBtn = `<div class="sitem sitem-new" onclick="startNew()">
+    const newBtn   = `<div class="sitem sitem-new" onclick="startNew()">
       <div class="sitem-name">✨ Mulai Sesi Baru</div>
       <div class="sitem-sub">Reset data lokal, pilih tanggal baru</div>
     </div>`;
-
     const sesiBtns = sessions.length
       ? sessions.slice().reverse().map(s =>
           `<div class="sitem" onclick="loadSesi('${s}')">
             <div class="sitem-name">📅 ${s}</div>
             <div class="sitem-sub">Lanjutkan sesi ini</div>
-          </div>`
-        ).join('')
+          </div>`).join('')
       : `<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">
-           Belum ada sesi tersimpan di Sheet
-         </div>`;
-
+           Belum ada sesi tersimpan di Sheet</div>`;
     $('sessList').innerHTML = newBtn + sesiBtns;
     $('loadOverlay').classList.add('open');
-  } catch (e) {
-    toast('❌ ' + e.message, 'err');
-  }
+  } catch(e) { toast('❌ '+e.message,'err'); }
 }
-
-function startNew() {
-  closeOverlay(null, 'loadOverlay');
-  // Buka date picker untuk pilih tanggal sesi baru
-  openDatePicker();
-}
-
+function startNew() { closeOverlay(null,'loadOverlay'); openDatePicker(); }
 async function loadSesi(sesi) {
-  closeOverlay(null, 'loadOverlay');
-  toast('Memuat sesi "' + sesi + '"...', 'inf');
+  closeOverlay(null,'loadOverlay');
+  toast('Memuat sesi "'+sesi+'"...','inf');
   try {
     const r = await api('loadSession', { sesi });
-    if (r.status !== 'ok') { toast('❌ ' + r.message, 'err'); return; }
-    const data = JSON.parse(r.data);
-    stocks = data;
-    $('inSesi').value = sesi;
-    save();
-    render();
-    toast('✅ Dimuat: ' + Object.keys(data).length + ' item', 'ok');
-  } catch (e) {
-    toast('❌ ' + e.message, 'err');
-  }
+    if (r.status !== 'ok') { toast('❌ '+r.message,'err'); return; }
+    stocks = JSON.parse(r.data);
+    save(); render();
+    toast('✅ Dimuat: '+Object.keys(stocks).length+' item','ok');
+  } catch(e) { toast('❌ '+e.message,'err'); }
 }
 
 // ══════════════════════════════════════════════════════
 // HAPUS SESI
 // ══════════════════════════════════════════════════════
 async function hapusSesi() {
-  if (!confirm('Hapus sesi "' + getSesi() + '" dari Sheet?\nData lokal juga akan dihapus.')) return;
-  toast('Menghapus...', 'inf');
+  if (!confirm('Hapus sesi "'+getSesi()+'" dari Sheet?\nData lokal juga akan dihapus.')) return;
+  toast('Menghapus...','inf');
   try {
     const r = await api('deleteSession', { sesi: getSesi() });
-    if (r.status === 'ok') {
-      stocks = {};
-      save();
-      render();
-      toast('✅ Sesi "' + getSesi() + '" dihapus', 'ok');
-    } else {
-      toast('❌ ' + (r.message || 'Gagal'), 'err');
-    }
-  } catch (e) {
-    toast('❌ ' + e.message, 'err');
-  }
+    if (r.status === 'ok') { stocks={}; save(); render(); toast('✅ Sesi "'+getSesi()+'" dihapus','ok'); }
+    else toast('❌ '+(r.message||'Gagal'),'err');
+  } catch(e) { toast('❌ '+e.message,'err'); }
 }
 
 // ══════════════════════════════════════════════════════
 // EXPORT CSV
 // ══════════════════════════════════════════════════════
 function exportCSV() {
-  const d = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  let csv = '\uFEFFNo,PLU,Nama Barang,Kategori,Isi,Per DOS,Stock DOS,Stock PCS,Total PCS,Sesi,Petugas\n';
-  let no = 0;
+  const d   = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  let csv   = '\uFEFFNo,PLU,Nama Barang,Kategori,Isi,Per DOS,Stock DOS,Stock PCS,Total PCS,Sesi,Petugas\n';
+  let no    = 0;
   for (const m of getMerks()) {
     for (const i of byMerk(m)) {
       no++;
-      const s = stocks[i.plu];
-      const dos = s ? (parseFloat(s.dos) || 0) : '';
-      const pcs = s ? (parseFloat(s.pcs) || 0) : '';
+      const s   = stocks[i.plu];
+      const dos = s ? (parseFloat(s.dos)||0) : '';
+      const pcs = s ? (parseFloat(s.pcs)||0) : '';
       const tot = calc(i.plu);
-      csv += `${no},"${i.plu}","${i.nama}","${i.kategori}","${i.isi}",${i.perDos},${dos},${pcs},${tot !== null ? tot : ''},"${getSesi()}","${getNama()}"\n`;
+      csv += `${no},"${i.plu}","${i.nama}","${i.kategori}","${i.isi}",${i.perDos},${dos},${pcs},${tot!==null?tot:''},"${getSesi()}","${getNama()}"\n`;
     }
   }
   try {
-    const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const b = new Blob([csv], { type:'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(b);
+    a.href     = URL.createObjectURL(b);
     a.download = `StockWellyMotor_${getSesi()}_${d}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    toast('✅ CSV terdownload', 'ok');
-  } catch (e) {
-    toast('❌ ' + e.message, 'err');
-  }
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast('✅ CSV terdownload','ok');
+  } catch(e) { toast('❌ '+e.message,'err'); }
 }
 
 // ══════════════════════════════════════════════════════
 // LAPORAN
 // ══════════════════════════════════════════════════════
 function openLap() {
-  if (statDone() === 0) { toast('Belum ada data', 'err'); return; }
-
+  if (statDone()===0) { toast('Belum ada data','err'); return; }
   const kats = KATS.length ? KATS : [''];
-  let html = '', grandDos = 0, grandPcs = 0, grandTot = 0;
-
+  let html='', grandDos=0, grandPcs=0, grandTot=0;
   for (const kat of kats) {
-    const items = kat
-      ? IT.filter(i => i.kategori === kat)
-      : IT;
+    const items = kat ? IT.filter(i=>i.kategori===kat) : IT;
     if (!items.length) continue;
-
-    let katDos = 0, katPcs = 0, katTot = 0;
-    let rows = '';
-
+    let katDos=0, katPcs=0, katTot=0, rows='';
     for (const i of items) {
       const s = stocks[i.plu];
-      if (!s || (s.dos === '' && s.pcs === '')) continue;
-      const dos = parseFloat(s.dos) || 0;
-      const pcs = parseFloat(s.pcs) || 0;
-      const tot = calc(i.plu) || 0;
-      if (dos === 0 && pcs === 0) continue;
-      rows += `<div class="lap-row">
+      if (!s||(s.dos===''&&s.pcs==='')) continue;
+      const dos=parseFloat(s.dos)||0, pcs=parseFloat(s.pcs)||0, tot=calc(i.plu)||0;
+      if (dos===0&&pcs===0) continue;
+      rows+=`<div class="lap-row">
         <span class="lap-plu">${i.plu}</span>
         <span class="lap-nm">${i.nama}</span>
         <span class="lap-n">${dos}</span>
         <span class="lap-n">${pcs}</span>
         <span class="lap-n hi">${tot}</span>
       </div>`;
-      katDos += dos; katPcs += pcs; katTot += tot;
+      katDos+=dos; katPcs+=pcs; katTot+=tot;
     }
-
     if (!katTot) continue;
-    html += `<div class="lap-kat">${kat || 'Semua'}</div>
+    html+=`<div class="lap-kat">${kat||'Semua'}</div>
       <div class="lap-row" style="font-size:10px;color:var(--muted);font-weight:700">
         <span class="lap-plu">PLU</span><span class="lap-nm">Nama</span>
         <span class="lap-n">DOS</span><span class="lap-n">PCS</span>
         <span class="lap-n hi">TOT</span>
       </div>${rows}
-      <div class="lap-sub">
-        Subtotal ${kat}
+      <div class="lap-sub">Subtotal ${kat}
         <span><b class="hi">${katDos}</b> DOS · <b class="hi">${katPcs}</b> PCS = <b class="hi">${katTot}</b></span>
       </div>`;
-    grandDos += katDos; grandPcs += katPcs; grandTot += katTot;
+    grandDos+=katDos; grandPcs+=katPcs; grandTot+=katTot;
   }
-
-  html += `<div class="lap-ttl">
+  html+=`<div class="lap-ttl">
     <span>GRAND TOTAL</span>
     <span>${grandDos} DOS · ${grandPcs} PCS = ${grandTot}</span>
   </div>
   <button class="lap-copy" onclick="copyLap()" type="button">📋 Salin ke Clipboard</button>`;
-
   $('lapContent').innerHTML = html;
   $('lapModal').classList.add('open');
 }
 
 function copyLap() {
   let txt = `📊 LAPORAN STOK OPNAME\nSesi: ${getSesi()} | Petugas: ${getNama()}\n${'='.repeat(40)}\n`;
-  const rows = document.querySelectorAll('#lapContent .lap-kat, #lapContent .lap-row, #lapContent .lap-sub, #lapContent .lap-ttl');
-  rows.forEach(r => {
-    if (r.classList.contains('lap-kat')) txt += '\n--- ' + r.textContent + ' ---\n';
-    else if (r.classList.contains('lap-sub')) txt += r.textContent.trim() + '\n';
-    else if (r.classList.contains('lap-ttl')) txt += '\n' + r.textContent.trim() + '\n';
-    else {
-      const cells = r.querySelectorAll('span');
-      if (cells.length >= 5)
-        txt += `${cells[0].textContent} | ${cells[1].textContent} | ${cells[2].textContent} DOS | ${cells[3].textContent} PCS | ${cells[4].textContent}\n`;
-    }
-  });
+  document.querySelectorAll('#lapContent .lap-kat,#lapContent .lap-row,#lapContent .lap-sub,#lapContent .lap-ttl')
+    .forEach(r => {
+      if (r.classList.contains('lap-kat'))  txt += '\n--- '+r.textContent+' ---\n';
+      else if (r.classList.contains('lap-sub')||r.classList.contains('lap-ttl')) txt += r.textContent.trim()+'\n';
+      else {
+        const cells = r.querySelectorAll('span');
+        if (cells.length>=5)
+          txt += `${cells[0].textContent} | ${cells[1].textContent} | ${cells[2].textContent} DOS | ${cells[3].textContent} PCS | ${cells[4].textContent}\n`;
+      }
+    });
   navigator.clipboard?.writeText(txt)
-    .then(() => toast('✅ Tersalin ke clipboard', 'ok'))
-    .catch(() => toast('❌ Gagal salin', 'err'));
+    .then(()=>toast('✅ Tersalin ke clipboard','ok'))
+    .catch(()=>toast('❌ Gagal salin','err'));
 }
 
 // ══════════════════════════════════════════════════════
-// OVERLAY UTILS
+// OVERLAY UTILS & TOAST
 // ══════════════════════════════════════════════════════
 function closeOverlay(e, id) {
   if (!e || e.target === $(id)) $(id).classList.remove('open');
 }
-
-// ══════════════════════════════════════════════════════
-// TOAST
-// ══════════════════════════════════════════════════════
-function toast(msg, type = 'ok') {
+function toast(msg, type='ok') {
   const t = $('toast');
   clearTimeout(t._t);
   t.textContent = msg;
-  t.className = 'toast show ' + type;
-  t._t = setTimeout(() => { t.className = 'toast'; }, 3000);
+  t.className   = 'toast show ' + type;
+  t._t = setTimeout(()=>{ t.className='toast'; }, 3000);
 }
 
 // ══════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════
 (function init() {
-  // Load data lokal — handles sesi date comparison & auto-reset
   loadLocal();
-  // Load items (dari cache kalau ada, dari server kalau belum)
+  loadRiwayat();
   loadItems();
 })();
 </script>
